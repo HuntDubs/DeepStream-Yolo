@@ -21,6 +21,7 @@
 #
 # Edited by Marcos Luciano
 # https://www.github.com/marcoslucianops
+#This is Hunter making an edit
 ################################################################################
 
 CUDA_VER?=
