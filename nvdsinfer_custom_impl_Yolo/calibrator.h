@@ -1,7 +1,10 @@
 /*
  * Created by Marcos Luciano
  * https://www.github.com/marcoslucianops
+ * 
+ * Calibrator.h and Calibrator.cpp only compiled and used if using OPENCV
  */
+
 
 #ifndef CALIBRATOR_H
 #define CALIBRATOR_H
