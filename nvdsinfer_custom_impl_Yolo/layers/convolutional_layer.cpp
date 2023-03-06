@@ -13,8 +13,10 @@ convolutionalLayer(int layerIdx, std::map<std::string, std::string>& block, std:
     std::vector<nvinfer1::Weights>& trtWeights, int& weightPtr, std::string weightsType, int& inputChannels, float eps,
     nvinfer1::ITensor* input, nvinfer1::INetworkDefinition* network, std::string layerName)
 {
+  //Makes a tensor object to return
   nvinfer1::ITensor* output;
 
+  //Make assertions about the input values of the function, to make sure we have valid input
   assert(block.at("type") == "convolutional" || block.at("type") == "c2f");
   assert(block.find("filters") != block.end());
   assert(block.find("pad") != block.end());

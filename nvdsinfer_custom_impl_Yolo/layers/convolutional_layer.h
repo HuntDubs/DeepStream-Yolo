@@ -3,6 +3,8 @@
  * https://www.github.com/marcoslucianops
  */
 
+// First thing I noticed is there is no class declaration in the header files, so we are just defining a function that returns a ITensor class instance
+
 #ifndef __CONVOLUTIONAL_LAYER_H__
 #define __CONVOLUTIONAL_LAYER_H__
 
