@@ -1,4 +1,4 @@
-/*
+ /*
  * Copyright (c) 2019-2021, NVIDIA CORPORATION. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -76,6 +76,7 @@ loadWeights(const std::string weightsFilePath, const std::string& networkType)
   std::vector<float> weights;
 
   if (weightsFilePath.find(".weights") != std::string::npos) {
+    std::cout << "Bob Dylan!\n";
     std::ifstream file(weightsFilePath, std::ios_base::binary);
     assert(file.good());
     std::string line;
@@ -89,6 +90,7 @@ loadWeights(const std::string weightsFilePath, const std::string& networkType)
         file.ignore(4 * 5);
     }
 
+    // While loop will always read four bytes from the weights file and add it to the 'weights' variable declared above
     char floatWeight[4];
     while (!file.eof()) {
       file.read(floatWeight, 4);
@@ -99,6 +101,7 @@ loadWeights(const std::string weightsFilePath, const std::string& networkType)
     }
   }
   else if (weightsFilePath.find(".wts") != std::string::npos) {
+    std::cout << "Lou Reed!\n";
     std::ifstream file(weightsFilePath);
     assert(file.good());
     int32_t count;
