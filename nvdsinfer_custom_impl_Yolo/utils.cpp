@@ -76,7 +76,6 @@ loadWeights(const std::string weightsFilePath, const std::string& networkType)
   std::vector<float> weights;
 
   if (weightsFilePath.find(".weights") != std::string::npos) {
-    std::cout << "Bob Dylan!\n";
     std::ifstream file(weightsFilePath, std::ios_base::binary);
     assert(file.good());
     std::string line;
@@ -100,11 +99,12 @@ loadWeights(const std::string weightsFilePath, const std::string& networkType)
         break;
     }
   }
+  // We have a .wts file so we take this path
   else if (weightsFilePath.find(".wts") != std::string::npos) {
-    std::cout << "Lou Reed!\n";
     std::ifstream file(weightsFilePath);
     assert(file.good());
     int32_t count;
+    // I am assuming the header of the weights file includes a count of Total weights
     file >> count;
     assert(count > 0 && "\nInvalid .wts file.");
 
@@ -114,6 +114,7 @@ loadWeights(const std::string weightsFilePath, const std::string& networkType)
 
     while (count--) {
       file >> name >> std::dec >> size;
+      std::cout << name << "\n";
       for (uint32_t x = 0, y = size; x < y; ++x) {
         file >> std::hex >> floatWeight;
         weights.push_back(*reinterpret_cast<float*>(&floatWeight));
