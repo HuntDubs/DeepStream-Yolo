@@ -109,12 +109,15 @@ Yolo::createEngine(nvinfer1::IBuilder* builder, nvinfer1::IBuilderConfig* config
   return engine;
 }
 
+// Based on output to console, this is where we start execution
 NvDsInferStatus
 Yolo::parseModel(nvinfer1::INetworkDefinition& network) {
   destroyNetworkUtils();
 
+  //read the weights stored in the weights file
   std::vector<float> weights = loadWeights(m_WtsFilePath, m_NetworkType);
   std::cout << "Building YOLO network\n" << std::endl;
+  //Build the yolo nerwork by building each yolo layer
   NvDsInferStatus status = buildYoloNetwork(weights, network);
 
   if (status == NVDSINFER_SUCCESS)
@@ -125,6 +128,7 @@ Yolo::parseModel(nvinfer1::INetworkDefinition& network) {
   return status;
 }
 
+// Currently here !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 NvDsInferStatus
 Yolo::buildYoloNetwork(std::vector<float>& weights, nvinfer1::INetworkDefinition& network)
 {

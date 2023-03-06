@@ -112,9 +112,9 @@ loadWeights(const std::string weightsFilePath, const std::string& networkType)
     std::string name;
     uint32_t size;
 
+    // Iterate through each tensor and store the weights as hex values in ' weights '
     while (count--) {
       file >> name >> std::dec >> size;
-      std::cout << name << "\n";
       for (uint32_t x = 0, y = size; x < y; ++x) {
         file >> std::hex >> floatWeight;
         weights.push_back(*reinterpret_cast<float*>(&floatWeight));
@@ -126,6 +126,8 @@ loadWeights(const std::string weightsFilePath, const std::string& networkType)
     assert(0);
   }
 
+  // Loading Weights of yolov5s complete
+  // Total weights read: 7254397
   std::cout << "Loading weights of " << networkType << " complete" << std::endl;
   std::cout << "Total weights read: " << weights.size() << std::endl;
 
