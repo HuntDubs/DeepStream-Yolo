@@ -132,6 +132,8 @@ Yolo::parseModel(nvinfer1::INetworkDefinition& network) {
 NvDsInferStatus
 Yolo::buildYoloNetwork(std::vector<float>& weights, nvinfer1::INetworkDefinition& network)
 {
+  // std::string::npos simply means 'until the end of the string'
+
   int weightPtr = 0;
 
   std::string weightsType = "wts";
@@ -146,6 +148,8 @@ Yolo::buildYoloNetwork(std::vector<float>& weights, nvinfer1::INetworkDefinition
   else if (m_NetworkType.find("yolor") != std::string::npos)
     eps = 1.0e-4;
 
+
+  // Itensor variable, must look into
   nvinfer1::ITensor* data = network.addInput(m_InputBlobName.c_str(), nvinfer1::DataType::kFLOAT,
       nvinfer1::Dims{3, {static_cast<int>(m_InputC), static_cast<int>(m_InputH), static_cast<int>(m_InputW)}});
   assert(data != nullptr && data->getDimensions().nbDims > 0);
