@@ -89,6 +89,7 @@ class Yolo : public IModelParser {
     nvinfer1::ICudaEngine* createEngine(nvinfer1::IBuilder* builder, nvinfer1::IBuilderConfig* config);
 
   protected:
+    //All of these variables are initialized in the constructor
     const std::string m_InputBlobName;
     const std::string m_NetworkType;
     const std::string m_ConfigFilePath;
@@ -100,6 +101,7 @@ class Yolo : public IModelParser {
     const std::string m_NetworkMode;
     const float m_ScoreThreshold;
 
+    // All of these variables are initialized in parseConfigBlocks() using the [net] and [yolo] blocks
     uint m_InputH;
     uint m_InputW;
     uint m_InputC;

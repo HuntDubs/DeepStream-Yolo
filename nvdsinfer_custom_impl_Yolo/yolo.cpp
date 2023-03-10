@@ -51,10 +51,9 @@ Yolo::createEngine(nvinfer1::IBuilder* builder, nvinfer1::IBuilderConfig* config
   assert (builder);
 
   m_ConfigBlocks = parseConfigFile(m_ConfigFilePath);
-  std::cout << "Type of m_ConfigBlocks: "<< typeid(m_ConfigBlocks).name() << "\n";
-  // std::cout << "m_ConfigBlocks:\n" << m_ConfigBlocks << "\n";
   parseConfigBlocks();
 
+  //Creates a network definiton object. networkv2 supports dynamic shapes and explicit bash permissions
   nvinfer1::INetworkDefinition *network = builder->createNetworkV2(0);
   // Check if parseModel was a sucess before continuing
   if (parseModel(*network) != NVDSINFER_SUCCESS) {
@@ -119,6 +118,7 @@ Yolo::parseModel(nvinfer1::INetworkDefinition& network) {
   destroyNetworkUtils();
 
   //read the weights stored in the weights file
+    //find where loadWeights() is being defined
   std::vector<float> weights = loadWeights(m_WtsFilePath, m_NetworkType);
   std::cout << "Building YOLO network\n" << std::endl;
   //Build the yolo nerwork by building each yolo layer
@@ -531,6 +531,7 @@ Yolo::parseConfigFile(const std::string cfgFilePath)
       continue;
 
     line = trim(line);
+    // For example the line , [convolutional] , would take this if 
     if (line.front() == '[') {
       if (block.size() > 0) {
         blocks.push_back(block);
@@ -540,6 +541,7 @@ Yolo::parseConfigFile(const std::string cfgFilePath)
       std::string value = trim(line.substr(1, line.size() - 2));
       block.insert(std::pair<std::string, std::string>(key, value));
     }
+    // For example the line, filters=32 , would take this else 
     else {
       int cpos = line.find('=');
       std::string key = trim(line.substr(0, cpos));
@@ -547,11 +549,12 @@ Yolo::parseConfigFile(const std::string cfgFilePath)
       block.insert(std::pair<std::string, std::string>(key, value));
     }
   }
-
   blocks.push_back(block);
   return blocks;
 }
 
+// Go through all the blocks and make sure specific blocks have the information we need
+  // Specifically for us, we need correct [net], [yolo], 
 void
 Yolo::parseConfigBlocks()
 {
@@ -571,6 +574,7 @@ Yolo::parseConfigBlocks()
     }
     else if ((block.at("type") == "region") || (block.at("type") == "yolo"))
     {
+      // Checks for the absolutely neccessary information
       assert((block.find("num") != block.end()) &&
           std::string("Missing 'num' param in " + block.at("type") + " layer").c_str());
       assert((block.find("classes") != block.end()) &&
@@ -585,8 +589,10 @@ Yolo::parseConfigBlocks()
       if (block.find("new_coords") != block.end())
         m_NewCoords = std::stoul(block.at("new_coords"));
 
+      //TensorInfo is a struct defined in yolo.h
       TensorInfo outputTensor;
 
+      // Add all anchor values to the TensorInfo instance
       std::string anchorString = block.at("anchors");
       while (!anchorString.empty()) {
         int npos = anchorString.find_first_of(',');
@@ -602,6 +608,7 @@ Yolo::parseConfigBlocks()
         }
       }
 
+      // Add all mask values to the TensorInfo instanc
       if (block.find("mask") != block.end()) {
         std::string maskString = block.at("mask");
         while (!maskString.empty()) {
@@ -618,7 +625,8 @@ Yolo::parseConfigBlocks()
           }
         }
       }
-
+      
+      // Add scale to the outputTensor
       if (block.find("scale_x_y") != block.end())
         outputTensor.scaleXY = std::stof(block.at("scale_x_y"));
       else
@@ -626,13 +634,16 @@ Yolo::parseConfigBlocks()
 
       outputTensor.numBBoxes = outputTensor.mask.size() > 0 ? outputTensor.mask.size() : std::stoul(trim(block.at("num")));
       
+      // Adds a TensorInfo object to our YoloTensors variable. This output variable is made from information in the [yolo] block
       m_YoloTensors.push_back(outputTensor);
     }
+    // We don't take this path with yolov5 config
     else if ((block.at("type") == "cls") || (block.at("type") == "reg")) {
       ++m_YoloCount;
       TensorInfo outputTensor;
       m_YoloTensors.push_back(outputTensor);
     }
+    // Or this path
     else if (block.at("type") == "detect_v8") {
       ++m_YoloCount;
 
@@ -641,6 +652,7 @@ Yolo::parseConfigBlocks()
       TensorInfo outputTensor;
       m_YoloTensors.push_back(outputTensor);
     }
+    // Or this path
     else if (block.at("type") == "detect_x") {
       ++m_YoloCount;
       TensorInfo outputTensor;

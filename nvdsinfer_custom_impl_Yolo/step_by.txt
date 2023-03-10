@@ -5,3 +5,31 @@ yolo.cpp:
 
 2. Yolo::createEngine(nvinfer1::IBuilder* builder, nvinfer1::IBuilderConfig* config)
     - Parse the config file into seperate blocks
+
+3. Yolo::parseConfigFile(const std::string cfgFilePath)
+    - Make <key, value> pairs for each Block in the config file
+        ex. <"type", "convolutional">
+        ex. <"batch_normalize", "1">
+        ex. <"filters", "32">
+    - Each block is a line in the config file !!
+
+4. Yolo::createEngine(nvinfer1::IBuilder* builder, nvinfer1::IBuilderConfig* config)
+    - Call parse config blocks
+
+5. Yolo::parseConfigBlocks()
+    - Checks for necessary information stored in the [net] and [yolo] blocks
+    - In the [yolo] blocks, creates an outputTensor for each [yolo] block and adds it to our list (actual a vector) of yoloTensors
+    - More [''] paths to check, but none of those paths included in our yolov5 config
+
+6. Yolo::createEngine(nvinfer1::IBuilder* builder, nvinfer1::IBuilderConfig* config)
+    - Call ParseModel(network) with a network defintion that was created from nvinfer classes
+    - Checks that ParseModel(..) returns as a success before proceding with the building of the TensorRT createEngine
+
+7. Yolo::parseModel(nvinfer1::INetworkDefinition& network)
+    - calls Yolo::destroyNetworkUtils()
+        - clears all values that might be stored in m_TrtWeights
+    - Reads the weights from the weights file
+    - Calls buildYoloNetwork
+
+8. Yolo::buildYoloNetwork(std::vector<float>& weights, nvinfer1::INetworkDefinition& network)
+    - 
