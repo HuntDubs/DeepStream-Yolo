@@ -51,8 +51,8 @@ Yolo::createEngine(nvinfer1::IBuilder* builder, nvinfer1::IBuilderConfig* config
   assert (builder);
 
   m_ConfigBlocks = parseConfigFile(m_ConfigFilePath);
-  // std::cout << "Type of m_ConfigBlocks: "<< typeid(m_ConfigBlocks).name() << "\n";
-  std::cout << "m_ConfigBlocks:\n" << m_ConfigBlocks << "\n";
+  std::cout << "Type of m_ConfigBlocks: "<< typeid(m_ConfigBlocks).name() << "\n";
+  // std::cout << "m_ConfigBlocks:\n" << m_ConfigBlocks << "\n";
   parseConfigBlocks();
 
   nvinfer1::INetworkDefinition *network = builder->createNetworkV2(0);
