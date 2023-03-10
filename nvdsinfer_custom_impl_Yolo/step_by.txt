@@ -1,3 +1,7 @@
 yolo.cpp:
 
-1. 
+1. Yolo::Yolo(const NetworkInfo& networkInfo)
+    - Initialize all private variables
+
+2. Yolo::createEngine(nvinfer1::IBuilder* builder, nvinfer1::IBuilderConfig* config)
+    - Parse the config file into seperate blocks

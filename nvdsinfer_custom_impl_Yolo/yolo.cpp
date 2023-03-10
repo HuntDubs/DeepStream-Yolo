@@ -48,13 +48,15 @@ Yolo::~Yolo()
 nvinfer1::ICudaEngine* 
 Yolo::createEngine(nvinfer1::IBuilder* builder, nvinfer1::IBuilderConfig* config)
 {
-  std::cout << "Lou Reed\n";
   assert (builder);
 
   m_ConfigBlocks = parseConfigFile(m_ConfigFilePath);
+  std::cout << "Type of m_ConfigBlocks: "<<typeid(m_ConfigBlocks).name() << "\n";
+  std::cout << "m_ConfigBlocks:\n" << m_ConfigBlocks << "\n";
   parseConfigBlocks();
 
   nvinfer1::INetworkDefinition *network = builder->createNetworkV2(0);
+  // Check if parseModel was a sucess before continuing
   if (parseModel(*network) != NVDSINFER_SUCCESS) {
     delete network;
     return nullptr;
@@ -114,7 +116,6 @@ Yolo::createEngine(nvinfer1::IBuilder* builder, nvinfer1::IBuilderConfig* config
 // Based on output to console, this is where we start execution
 NvDsInferStatus
 Yolo::parseModel(nvinfer1::INetworkDefinition& network) {
-  std::cout << "Bob Dylan\n";
   destroyNetworkUtils();
 
   //read the weights stored in the weights file
