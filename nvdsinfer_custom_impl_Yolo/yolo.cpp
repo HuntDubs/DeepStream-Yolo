@@ -30,6 +30,7 @@
 #include "calibrator.h"
 #endif
 
+// Initialize all private variables
 Yolo::Yolo(const NetworkInfo& networkInfo) : m_InputBlobName(networkInfo.inputBlobName),
     m_NetworkType(networkInfo.networkType), m_ConfigFilePath(networkInfo.configFilePath),
     m_WtsFilePath(networkInfo.wtsFilePath), m_Int8CalibPath(networkInfo.int8CalibPath), m_DeviceType(networkInfo.deviceType),
@@ -47,6 +48,7 @@ Yolo::~Yolo()
 nvinfer1::ICudaEngine* 
 Yolo::createEngine(nvinfer1::IBuilder* builder, nvinfer1::IBuilderConfig* config)
 {
+  std::cout << "Lou Reed\n";
   assert (builder);
 
   m_ConfigBlocks = parseConfigFile(m_ConfigFilePath);
@@ -112,6 +114,7 @@ Yolo::createEngine(nvinfer1::IBuilder* builder, nvinfer1::IBuilderConfig* config
 // Based on output to console, this is where we start execution
 NvDsInferStatus
 Yolo::parseModel(nvinfer1::INetworkDefinition& network) {
+  std::cout << "Bob Dylan\n";
   destroyNetworkUtils();
 
   //read the weights stored in the weights file
@@ -128,7 +131,21 @@ Yolo::parseModel(nvinfer1::INetworkDefinition& network) {
   return status;
 }
 
-// Currently here !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+/*
+typedef enum {
+       NVDSINFER_SUCCESS = 0,
+       NVDSINFER_CONFIG_FAILED,
+       NVDSINFER_CUSTOM_LIB_FAILED,
+      NVDSINFER_INVALID_PARAMS,
+      NVDSINFER_OUTPUT_PARSING_FAILED,
+       NVDSINFER_CUDA_ERROR,
+       NVDSINFER_TENSORRT_ERROR,
+       NVDSINFER_RESOURCE_ERROR,
+       NVDSINFER_TRTIS_ERROR,
+       NVDSINFER_UNKNOWN_ERROR
+   } NvDsInferStatus;
+*/
+//We want to return NVDSINFER_SUCCESS as a success, with no other errors
 NvDsInferStatus
 Yolo::buildYoloNetwork(std::vector<float>& weights, nvinfer1::INetworkDefinition& network)
 {
@@ -165,7 +182,7 @@ Yolo::buildYoloNetwork(std::vector<float>& weights, nvinfer1::INetworkDefinition
   for (uint i = 0; i < m_ConfigBlocks.size(); ++i) {
     std::string layerIndex = "(" + std::to_string(tensorOutputs.size()) + ")";
 
-    if (m_ConfigBlocks.at(i).at("type") == "net")
+    if (m_ConfigBlocks.at(i).at("type") == "net") //Print the headers for each column in the Yolo network
         printLayerInfo("", "Layer", "Input Shape", "Output Shape", "WeightPtr");
     else if (m_ConfigBlocks.at(i).at("type") == "convolutional") {
       int channels = getNumChannels(previous);
