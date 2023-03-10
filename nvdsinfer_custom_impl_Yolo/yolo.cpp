@@ -180,6 +180,8 @@ Yolo::buildYoloNetwork(std::vector<float>& weights, nvinfer1::INetworkDefinition
 
   int modelType = -1;
 
+  // Loop through all of the blocks
+    // starting with the [net] block, which will print the column headers
   for (uint i = 0; i < m_ConfigBlocks.size(); ++i) {
     std::string layerIndex = "(" + std::to_string(tensorOutputs.size()) + ")";
 
@@ -187,16 +189,23 @@ Yolo::buildYoloNetwork(std::vector<float>& weights, nvinfer1::INetworkDefinition
         printLayerInfo("", "Layer", "Input Shape", "Output Shape", "WeightPtr");
     else if (m_ConfigBlocks.at(i).at("type") == "convolutional") {
       int channels = getNumChannels(previous);
+      // The input shape
       std::string inputVol = dimsToString(previous->getDimensions());
+      // Creates a convolutionalLayer object based on convolutinal_layer.h and convolutional_layer.cpp
+        //Will be similar for all other types of layers
       previous = convolutionalLayer(i, m_ConfigBlocks.at(i), weights, m_TrtWeights, weightPtr, weightsType, channels, eps,
           previous, &network);
       assert(previous != nullptr);
+      // The output shape
       std::string outputVol = dimsToString(previous->getDimensions());
+      // Add the convolutionalLayer as a tensor to the tensorOutputs vector
       tensorOutputs.push_back(previous);
+      // Layer name , ex. Conv_silu , ex. Conv_logistic
       std::string layerName = "conv_" + m_ConfigBlocks.at(i).at("activation");
+      // Print information to the command line
       printLayerInfo(layerIndex, layerName, inputVol, outputVol, std::to_string(weightPtr));
     }
-    else if (m_ConfigBlocks.at(i).at("type") == "deconvolutional") {
+    else if (m_ConfigBlocks.at(i).at("type") == "deconvolutional") { 
       int channels = getNumChannels(previous);
       std::string inputVol = dimsToString(previous->getDimensions());
       previous = deconvolutionalLayer(i, m_ConfigBlocks.at(i), weights, m_TrtWeights, weightPtr, weightsType, channels,

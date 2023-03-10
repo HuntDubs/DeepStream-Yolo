@@ -32,4 +32,12 @@ yolo.cpp:
     - Calls buildYoloNetwork
 
 8. Yolo::buildYoloNetwork(std::vector<float>& weights, nvinfer1::INetworkDefinition& network)
-    - 
+    - sets weightsType to the type of weights file (e.g. wts or weights)
+    - Iterates over every block and takes action based on each block
+        - Ex. convolutional
+            - Saves the input shape (e.g. [3, 640, 640])
+            - Creates a convolutionalLayer Tensor
+            - Saves the output shape (e.g. [32, 320, 320])
+            - Adds the tensor to the tensorOutputs vector
+            - Saves the layer name based on it's activation layer (e.g. conv-silu)
+            - Prints information to the command line
