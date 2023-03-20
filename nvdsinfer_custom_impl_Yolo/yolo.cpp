@@ -21,6 +21,10 @@
  *
  * Edited by Marcos Luciano
  * https://www.github.com/marcoslucianops
+ * 
+ * output with a confidence score and a class I.D.
+ * 
+ * This parser is made by some rando, so locate his parts and not the nvidia parts
  */
 
 #include "yolo.h"

@@ -1,6 +1,18 @@
 /*
  * Created by Marcos Luciano
  * https://www.github.com/marcoslucianops
+ * 
+ * 
+ * 
+ * Example:
+ * 
+ * [convolutional]
+  batch_normalize=1
+  filters=32
+  size=6
+  stride=2
+  pad=2
+  activation=silu
  */
 
 #include "convolutional_layer.h"
@@ -23,6 +35,7 @@ convolutionalLayer(int layerIdx, std::map<std::string, std::string>& block, std:
   assert(block.find("size") != block.end());
   assert(block.find("stride") != block.end());
 
+  // assign each variable from the config file
   int filters = std::stoi(block.at("filters"));
   int padding = std::stoi(block.at("pad"));
   int kernelSize = std::stoi(block.at("size"));
@@ -30,12 +43,14 @@ convolutionalLayer(int layerIdx, std::map<std::string, std::string>& block, std:
   std::string activation = block.at("activation");
   int bias = filters;
 
+  // For yoloV5, batchNormalize will be set to true
   bool batchNormalize = false;
   if (block.find("batch_normalize") != block.end()) {
     bias = 0;
     batchNormalize = (block.at("batch_normalize") == "1");
   }
 
+  // For yoloV5, no bias or groups
   if (block.find("bias") != block.end()) {
     bias = std::stoi(block.at("bias"));
     if (bias == 1)
@@ -60,6 +75,7 @@ convolutionalLayer(int layerIdx, std::map<std::string, std::string>& block, std:
   nvinfer1::Weights convWt {nvinfer1::DataType::kFLOAT, nullptr, size};
   nvinfer1::Weights convBias {nvinfer1::DataType::kFLOAT, nullptr, bias};
 
+  // It's not of type "weights" for YoloV5, move to else
   if (weightsType == "weights") {
     if (batchNormalize == false) {
       float* val;
@@ -117,6 +133,7 @@ convolutionalLayer(int layerIdx, std::map<std::string, std::string>& block, std:
         trtWeights.push_back(convBias);
     }
   }
+  // Run this else
   else {
     if (batchNormalize == false) {
       float* val = new float[size];
@@ -136,13 +153,18 @@ convolutionalLayer(int layerIdx, std::map<std::string, std::string>& block, std:
         trtWeights.push_back(convBias);
       }
     }
+    // Run this else
+    // weightPtr starts out at 0 for the first conv layer, but is incremented here.
+      // since the weightPtr variable is a referenced int (int&) , we are changing the weightPtr variable in yolo.cpp as well
     else {
       float* val = new float[size];
+      // Load the weight values for this conv layer
       for (int i = 0; i < size; ++i) {
         val[i] = weights[weightPtr];
         ++weightPtr;
       }
       convWt.values = val;
+      //  
       if (bias != 0) {
         val = new float[filters];
         for (int i = 0; i < filters; ++i) {
