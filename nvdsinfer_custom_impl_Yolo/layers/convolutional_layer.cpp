@@ -164,7 +164,7 @@ convolutionalLayer(int layerIdx, std::map<std::string, std::string>& block, std:
         ++weightPtr;
       }
       convWt.values = val;
-      //  
+      // No bias for yolov5
       if (bias != 0) {
         val = new float[filters];
         for (int i = 0; i < filters; ++i) {
@@ -173,6 +173,8 @@ convolutionalLayer(int layerIdx, std::map<std::string, std::string>& block, std:
         }
         convBias.values = val;
       }
+      // The weights file is followed by these headeders, reads in the following data from them
+        // Still yet to completely sure what bn is supposed to be for, and why its present on every conolutional layer
       for (int i = 0; i < filters; ++i) {
         bnWeights.push_back(weights[weightPtr]);
         ++weightPtr;
@@ -195,9 +197,11 @@ convolutionalLayer(int layerIdx, std::map<std::string, std::string>& block, std:
     }
   }
 
+  // Creates a convolutional layer object based on nvinfer defined classes
   nvinfer1::IConvolutionLayer* conv = network->addConvolutionNd(*input, filters, nvinfer1::Dims{2, {kernelSize, kernelSize}},
       convWt, convBias);
   assert(conv != nullptr);
+  // Make up some layer name (I assume the layerName variable to be empty)
   std::string convLayerName = "conv_" + layerName + std::to_string(layerIdx);
   conv->setName(convLayerName.c_str());
   conv->setStrideNd(nvinfer1::Dims{2, {stride, stride}});
@@ -208,6 +212,7 @@ convolutionalLayer(int layerIdx, std::map<std::string, std::string>& block, std:
 
   output = conv->getOutput(0);
 
+  // A bunch of batchNormalize operations. Need to do more research into this
   if (batchNormalize == true) {
     size = filters;
     nvinfer1::Weights shift {nvinfer1::DataType::kFLOAT, nullptr, size};
