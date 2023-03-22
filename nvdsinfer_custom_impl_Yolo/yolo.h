@@ -26,9 +26,11 @@
 #ifndef _YOLO_H_
 #define _YOLO_H_
 
+// Nvidia Source Files
 #include "NvInferPlugin.h"
 #include "nvdsinfer_custom_impl.h"
 
+// Deepstream_yolo specific files
 #include "layers/convolutional_layer.h"
 #include "layers/deconvolutional_layer.h"
 #include "layers/c2f_layer.h"
