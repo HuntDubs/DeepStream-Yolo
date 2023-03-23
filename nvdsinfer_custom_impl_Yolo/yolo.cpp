@@ -265,6 +265,7 @@ Yolo::buildYoloNetwork(std::vector<float>& weights, nvinfer1::INetworkDefinition
       printLayerInfo(layerIndex, layerName, inputVol, outputVol, "-");
     }
     else if (m_ConfigBlocks.at(i).at("type") == "shortcut") {
+
       assert(m_ConfigBlocks.at(i).find("from") != m_ConfigBlocks.at(i).end());
       int from = stoi(m_ConfigBlocks.at(i).at("from"));
       if (from > 0)
@@ -471,11 +472,17 @@ Yolo::buildYoloNetwork(std::vector<float>& weights, nvinfer1::INetworkDefinition
     }
   }
 
+  // If the weightPtr didn't make it to the end of the file, we might have a problem!
   if ((int) weights.size() != weightPtr) {
     std::cerr << "\nNumber of unused weights left: " << weights.size() - weightPtr << std::endl;
     assert(0);
   }
 
+  // m_YoloCount was initialized to 0 in the class constructor, incremented for each yolo tensor in parseConfigBlocks()
+  // yoloCountInputs was incremented for each yolo tensor in buildYoloNetwork()
+      //Should be the exact same (in yolov5, 3)
+  // yoloTensorInputs is a list of Itensors (the list is as long as m_YoloCount) that hold the output from the tensor before the yolo layer (gonna be a conv layer)
+  // m_YoloTensors is a vector of type TensorInfo that was populated in parseConfigBlocks()
   if (m_YoloCount == yoloCountInputs) {
     assert((modelType != -1) && "\nCould not determine model type"); 
 

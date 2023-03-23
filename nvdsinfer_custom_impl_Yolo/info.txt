@@ -1,3 +1,17 @@
+Plan for this week:
+    -Finish comments on each of the layers that were used in yolov5
+    -Write the google docs documentation on how the config and weight files are processed
+    -"How does the parser take the final layer output of the model and create a bounding box, the confidence and the class ID"
+
+
+
+
+
+
+
+
+
+
 Names of headers from weights file:
 
 conv.weight

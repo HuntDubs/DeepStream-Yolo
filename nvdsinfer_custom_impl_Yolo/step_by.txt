@@ -18,6 +18,7 @@ yolo.cpp:
 
 5. Yolo::parseConfigBlocks()
     - Checks for necessary information stored in the [net] and [yolo] blocks
+    - increments m_yoloCount for each yolo layer (this will later decide the length of our array of yoloTensors)
     - In the [yolo] blocks, creates an outputTensor for each [yolo] block and adds it to our list (actual a vector) of yoloTensors
     - More [''] paths to check, but none of those paths included in our yolov5 config
 
@@ -41,3 +42,8 @@ yolo.cpp:
             - Adds the tensor to the tensorOutputs vector
             - Saves the layer name based on it's activation layer (e.g. conv-silu)
             - Prints information to the command line
+        - Cont.
+            - Saves the previous tensors dimensions (3d)
+            - Creates a object of the layer (of type ITensor) from it's corresponding .h, .cpp files (shortcut.h, shortcut.cpp, etc.)
+            - Saves the newly created tensors dimenstions (3d)
+            - Print layer name, input dims, output dims, and (if applicable) the weightsPtr that keeps track where we are in the weights file
