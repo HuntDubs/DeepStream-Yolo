@@ -369,6 +369,7 @@ Yolo::buildYoloNetwork(std::vector<float>& weights, nvinfer1::INetworkDefinition
       printLayerInfo(layerIndex, layerName, inputVol, outputVol, "-");
     }
     else if (m_ConfigBlocks.at(i).at("type") == "yolo" || m_ConfigBlocks.at(i).at("type") == "region") {
+      // For yolov5, our modelType = 1
       if (m_ConfigBlocks.at(i).at("type") == "yolo")
         if (m_NetworkType.find("yolor") != std::string::npos)
           modelType = 2;
@@ -377,13 +378,20 @@ Yolo::buildYoloNetwork(std::vector<float>& weights, nvinfer1::INetworkDefinition
       else
         modelType = 0;
 
+      // our modelType is 1, so blobName will be yolo_someindex
       std::string blobName = modelType != 0 ? "yolo_" + std::to_string(i) : "region_" + std::to_string(i);
+      // get Deminsions of previous layer (a conv layer)
       nvinfer1::Dims prevTensorDims = previous->getDimensions();
+      // Get TensorInfo struct of current yolo layer (0,1,or 2)
       TensorInfo& curYoloTensor = m_YoloTensors.at(yoloCountInputs);
+      // assign it's blobName
+        //Set the gridSize as the previous layers dimensions
       curYoloTensor.blobName = blobName;
       curYoloTensor.gridSizeX = prevTensorDims.d[2];
       curYoloTensor.gridSizeY = prevTensorDims.d[1];
 
+      // Do all this for printing to terminal
+        // Also increase the yoloCountInputs so we work with the next TensorInfo struct next time around
       std::string inputVol = dimsToString(previous->getDimensions());
       tensorOutputs.push_back(previous);
       yoloTensorInputs[yoloCountInputs] = previous;
@@ -487,14 +495,18 @@ Yolo::buildYoloNetwork(std::vector<float>& weights, nvinfer1::INetworkDefinition
     assert((modelType != -1) && "\nCould not determine model type"); 
 
     uint64_t outputSize = 0;
+    // Iterate over every TensorInfo object
     for (uint j = 0; j < yoloCountInputs; ++j) {
       TensorInfo& curYoloTensor = m_YoloTensors.at(j);
+      // modelType for Yolov5 should be 1, so take the else
+        // Set outputSize to be the previous layers x and y dimensions (which were stored in the TensorInfo struct) and numBBoxes (which is 9 in yolov5) all multiplied
       if (modelType == 3 || modelType == 4 || modelType == 5)
         outputSize = curYoloTensor.numBBoxes;
       else
         outputSize += curYoloTensor.gridSizeX * curYoloTensor.gridSizeY * curYoloTensor.numBBoxes;
     }
 
+    
     nvinfer1::IPluginV2* yoloPlugin = new YoloLayer(m_InputW, m_InputH, m_NumClasses, m_NewCoords, m_YoloTensors, outputSize,
         modelType, m_ScoreThreshold);
     assert(yoloPlugin != nullptr);
@@ -647,11 +659,15 @@ Yolo::parseConfigBlocks()
       }
       
       // Add scale to the outputTensor
+        // This does exist in the yolov5 config, so we set scaleXY = 2
       if (block.find("scale_x_y") != block.end())
         outputTensor.scaleXY = std::stof(block.at("scale_x_y"));
       else
         outputTensor.scaleXY = 1.0;
 
+      // For yolov5, num = 9 , and for each yolo model we have mask = {0,1,2} , mask = {3,4,5}, mask = {6,7,8}
+      // Essentially, if the number of masks is greater than 0, use that as the number of bboxes, if not then use the value at num
+        //In our case, these numbers are the exact same (9) so it doesn't really matter
       outputTensor.numBBoxes = outputTensor.mask.size() > 0 ? outputTensor.mask.size() : std::stoul(trim(block.at("num")));
       
       // Adds a TensorInfo object to our YoloTensors variable. This output variable is made from information in the [yolo] block
