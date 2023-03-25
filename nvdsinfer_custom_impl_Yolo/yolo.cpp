@@ -539,7 +539,7 @@ Yolo::buildYoloNetwork(std::vector<float>& weights, nvinfer1::INetworkDefinition
     network.markOutput(*detection_scores);
     network.markOutput(*detection_classes);
     // std::cout << "detection_classes is network output?: " << detection_classes->isNetworkOutput() << "\n";
-    // std::cout << "detection_classes dimensions: " << detection_classes->getDimensions() << "\n";
+    std::cout << "detection_classes dimensions: " << detection_classes->getDimensions() << "\n";
   }
   else {
     std::cerr << "\nError in yolo cfg file" << std::endl;
