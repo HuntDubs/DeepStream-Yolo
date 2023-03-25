@@ -52,4 +52,6 @@ yolo.cpp:
         - Since yolov5 is modelType = 1, then the outputSize is determined by gridSizeX * gridSizeY * numBBoxes
     - Create and add a yolo plugin layer to the network
     - Get the output tensors from the yolo plugin layer. These output tensors represent the number of detections, detection boxes, detection scores, and detection classes
-    
+    - Mark each of these tensors as output
+    - Print yolo layer information to the command line
+    - Return SUCCESS for building the yolo network... CONGRATULATIONS
