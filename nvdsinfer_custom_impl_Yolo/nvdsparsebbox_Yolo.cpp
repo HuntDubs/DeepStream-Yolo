@@ -101,7 +101,7 @@ NvDsInferParseCustomYolo(std::vector<NvDsInferLayerInfo> const& outputLayersInfo
 
   const NvDsInferLayerInfo& counts = outputLayersInfo[0];
   const NvDsInferLayerInfo& boxes = outputLayersInfo[1];
-  const NvDsInferLayerInfo& scores = outputLayersInfo[2];
+  const NvDsInferLayerInfo& scores = outputLayersInfo[2]; 
   const NvDsInferLayerInfo& classes = outputLayersInfo[3];
 
   std::vector<NvDsInferParseObjectInfo> outObjs = decodeYoloTensor((const int*) (counts.buffer),

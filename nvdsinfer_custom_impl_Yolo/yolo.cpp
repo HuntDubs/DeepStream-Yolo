@@ -506,15 +506,20 @@ Yolo::buildYoloNetwork(std::vector<float>& weights, nvinfer1::INetworkDefinition
         outputSize += curYoloTensor.gridSizeX * curYoloTensor.gridSizeY * curYoloTensor.numBBoxes;
     }
 
-    
+    // YoloLayer is a class defined in yoloPlugins.h
+      // Add the YoloLayer to the network as a plugin
     nvinfer1::IPluginV2* yoloPlugin = new YoloLayer(m_InputW, m_InputH, m_NumClasses, m_NewCoords, m_YoloTensors, outputSize,
         modelType, m_ScoreThreshold);
     assert(yoloPlugin != nullptr);
+    // Add a plugin layer to the network, addPluginV2(The input tensors to the layer, The number of input tensors, The layer plugin)
     nvinfer1::IPluginV2Layer* yolo = network.addPluginV2(yoloTensorInputs, m_YoloCount, *yoloPlugin);
     assert(yolo != nullptr);
+    // Set the name for the pluginLayer
     std::string yoloLayerName = "yolo";
     yolo->setName(yoloLayerName.c_str());
 
+    // yolo->getOutput(x) returns an output tensor at index x
+      // Get each output tensor and set their names to be what they represent (num_detections, etc.)
     std::string outputlayerName;
     nvinfer1::ITensor* num_detections = yolo->getOutput(0);
     outputlayerName = "num_detections";
@@ -528,10 +533,12 @@ Yolo::buildYoloNetwork(std::vector<float>& weights, nvinfer1::INetworkDefinition
     nvinfer1::ITensor* detection_classes = yolo->getOutput(3);
     outputlayerName = "detection_classes";
     detection_classes->setName(outputlayerName.c_str());
+    // Mark a tensor as a network output 
     network.markOutput(*num_detections);
     network.markOutput(*detection_boxes);
     network.markOutput(*detection_scores);
     network.markOutput(*detection_classes);
+    std::cout << "detection_classes: " << detection_classes << "\n";
   }
   else {
     std::cerr << "\nError in yolo cfg file" << std::endl;

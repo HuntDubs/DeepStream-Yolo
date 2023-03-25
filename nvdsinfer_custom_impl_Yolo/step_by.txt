@@ -47,3 +47,9 @@ yolo.cpp:
             - Creates a object of the layer (of type ITensor) from it's corresponding .h, .cpp files (shortcut.h, shortcut.cpp, etc.)
             - Saves the newly created tensors dimenstions (3d)
             - Print layer name, input dims, output dims, and (if applicable) the weightsPtr that keeps track where we are in the weights file
+    - checks to see if the weightsPtr made it to the end of the weigts file
+    - determines the outputSize based on the modelType
+        - Since yolov5 is modelType = 1, then the outputSize is determined by gridSizeX * gridSizeY * numBBoxes
+    - Create and add a yolo plugin layer to the network
+    - Get the output tensors from the yolo plugin layer. These output tensors represent the number of detections, detection boxes, detection scores, and detection classes
+    
