@@ -171,7 +171,7 @@ Yolo::buildYoloNetwork(std::vector<float>& weights, nvinfer1::INetworkDefinition
     eps = 1.0e-4;
 
 
-  // Itensor variable, must look into
+  // Add the information we extracted from the [net] layer as input for the network
   nvinfer1::ITensor* data = network.addInput(m_InputBlobName.c_str(), nvinfer1::DataType::kFLOAT,
       nvinfer1::Dims{3, {static_cast<int>(m_InputC), static_cast<int>(m_InputH), static_cast<int>(m_InputW)}});
   assert(data != nullptr && data->getDimensions().nbDims > 0);
