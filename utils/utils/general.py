@@ -82,6 +82,20 @@ LOGGER = logging.getLogger(LOGGING_NAME)  # define globally (used in train.py, v
 #     for fn in LOGGER.info, LOGGER.warning:
 #         setattr(LOGGER, fn.__name__, lambda x: fn(emojis(x)))  # emoji safe logging
 
+def is_writeable(dir, test=False):
+    # Return True if directory has write permissions, test opening a file with write permissions if test=True
+    if not test:
+        return os.access(dir, os.W_OK)  # possible issues on Windows
+    file = Path(dir) / 'tmp.txt'
+    try:
+        with open(file, 'w'):  # open file with write permissions
+            pass
+        file.unlink()  # remove file
+        return True
+    except OSError:
+        return False
+
+
 def user_config_dir(dir='Ultralytics', env_var='YOLOV5_CONFIG_DIR'):
     # Return path of user configuration directory. Prefer environment variable if exists. Make dir if required.
     env = os.getenv(env_var)
