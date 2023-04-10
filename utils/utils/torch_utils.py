@@ -1,7 +1,7 @@
 import torch
 import platform
 import os
-from utils.general import LOGGER, file_date, git_describe
+from utils.general import LOGGER, file_date, git_describe, check_version
 
 def select_device(device='', batch_size=0, newline=True):
     # device = None or 'cpu' or 0 or '0' or '0,1,2,3'
@@ -37,3 +37,18 @@ def select_device(device='', batch_size=0, newline=True):
         s = s.rstrip()
     LOGGER.info(s)
     return torch.device(arg)
+
+def copy_attr(a, b, include=(), exclude=()):
+    # Copy attributes from b to a, options to only include [...] and to exclude [...]
+    for k, v in b.__dict__.items():
+        if (len(include) and k not in include) or k.startswith('_') or k in exclude:
+            continue
+        else:
+            setattr(a, k, v)
+
+def smart_inference_mode(torch_1_9=check_version(torch.__version__, '1.9.0')):
+    # Applies torch.inference_mode() decorator if torch>=1.9.0 else torch.no_grad() decorator
+    def decorate(fn):
+        return (torch.inference_mode if torch_1_9 else torch.no_grad)()(fn)
+
+    return decorate
