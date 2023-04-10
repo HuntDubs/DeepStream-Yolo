@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np
 import torch
 from urllib.error import URLError
-from utils.general import (CONFIG_DIR, FONT, LOGGER, check_font, check_requirements, clip_boxes, increment_path, is_ascii, xywh2xyxy, xyxy2xywh)
+from utils.general import (CONFIG_DIR, FONT, check_font, check_requirements, clip_boxes, increment_path, is_ascii, xywh2xyxy, xyxy2xywh)
 
 
 class Colors:
