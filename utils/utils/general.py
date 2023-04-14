@@ -5,6 +5,8 @@ import platform
 from pathlib import Path
 from subprocess import check_output
 from datetime import datetime
+import torch
+import math
 
 LOGGING_NAME = 'yolov5'
 FILE = Path(__file__).resolve()
@@ -51,3 +53,9 @@ def file_date(path=__file__):
     # Return human-readable file modification date, i.e. '2021-3-26'
     t = datetime.fromtimestamp(Path(path).stat().st_mtime)
     return f'{t.year}-{t.month}-{t.day}'
+
+def make_divisible(x, divisor):
+    # Returns nearest x divisible by divisor
+    if isinstance(divisor, torch.Tensor):
+        divisor = int(divisor.max())  # to int
+    return math.ceil(x / divisor) * 
