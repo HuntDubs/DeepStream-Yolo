@@ -81,7 +81,9 @@ class Segment(Detect):
 
 class BaseModel(nn.Module):
     # YOLOv5 base model
-    pass
+    def forward(self, x, profile=False, visualize=False):
+        return self._forward_once(x, profile, visualize)  # single-scale inference, train
+
 
 class DetectionModel(BaseModel):
     # YOLOv5 detection model
