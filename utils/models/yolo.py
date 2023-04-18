@@ -126,6 +126,8 @@ class DetectionModel(BaseModel):
         print
         LOGGER.info('')
 
+Model = DetectionModel  # retain YOLOv5 'Model' class for backwards compatibility
+
 def parse_model(d, ch):  # model_dict, input_channels(3)
     # Parse a YOLOv5 model.yaml dictionary
     LOGGER.info(f"\n{'':>3}{'from':>18}{'n':>3}{'params':>10}  {'module':<40}{'arguments':<30}")
