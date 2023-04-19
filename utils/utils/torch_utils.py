@@ -1,5 +1,3 @@
-import torch
-import torch.nn as nn
 import platform
 import os
 from pathlib import Path
