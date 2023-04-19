@@ -1,6 +1,4 @@
-from utils.general import LOGGER, colorstr
-
-PREFIX = colorstr('AutoAnchor: ')
+from utils.general import LOGGER
 
 def check_anchor_order(m):
     # Check anchor order against stride order for YOLOv5 Detect() module m, and correct if necessary
@@ -8,5 +6,5 @@ def check_anchor_order(m):
     da = a[-1] - a[0]  # delta a
     ds = m.stride[-1] - m.stride[0]  # delta s
     if da and (da.sign() != ds.sign()):  # same order
-        LOGGER.info(f'{PREFIX}Reversing anchor order')
+        LOGGER.info(f'Reversing anchor order')
         m.anchors[:] = m.anchors.flip(0)
