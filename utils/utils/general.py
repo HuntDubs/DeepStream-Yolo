@@ -1,14 +1,11 @@
 import logging
 import logging.config
 import os
-import yaml
-import urllib
 import contextlib
 import time
 
 from typing import Optional
 import platform
-import torchvision
 import torch
 import pkg_resources as pkg
 from pathlib import Path
@@ -16,8 +13,6 @@ from subprocess import check_output
 from datetime import datetime
 import torch
 import math
-
-from utils.metrics import box_iou
 
 LOGGING_NAME = 'yolov5'
 FILE = Path(__file__).resolve()
