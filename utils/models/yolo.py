@@ -1,3 +1,4 @@
+
 import torch
 import torch.nn as nn
 from pathlib import Path
@@ -27,6 +28,7 @@ class Detect(nn.Module):
         self.m = nn.ModuleList(nn.Conv2d(x, self.no * self.na, 1) for x in ch)  # output conv
         self.inplace = inplace  # use inplace ops (e.g. slice assignment)
 
+
 class Segment(Detect):
     # YOLOv5 Segment head for segmentation models
     def __init__(self, nc=80, anchors=(), nm=32, npr=256, ch=(), inplace=True):
@@ -42,6 +44,7 @@ class Segment(Detect):
         p = self.proto(x[0])
         x = self.detect(self, x)
         return (x, p) if self.training else (x[0], p) if self.export else (x[0], p, x[1])
+
 
 class BaseModel(nn.Module):
     # YOLOv5 base model
@@ -87,6 +90,7 @@ class DetectionModel(BaseModel):
         # Init weights, biases
         initialize_weights(self)
         self.info()
+
         print
         LOGGER.info('')
 
@@ -149,4 +153,4 @@ def parse_model(d, ch):  # model_dict, input_channels(3)
         if i == 0:
             ch = []
         ch.append(c2)
-    return nn.Sequential(*layers), sorted(save)
+        return nn.Sequential(*layers), sorted(save)

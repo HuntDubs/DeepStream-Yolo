@@ -1,6 +1,5 @@
 from utils.general import LOGGER
 
-
 def check_anchor_order(m):
     # Check anchor order against stride order for YOLOv5 Detect() module m, and correct if necessary
     a = m.anchors.prod(-1).mean(-1).view(-1)  # mean anchor area per output layer
