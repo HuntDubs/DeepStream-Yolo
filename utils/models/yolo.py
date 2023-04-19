@@ -6,8 +6,7 @@ import yaml
 from copy import deepcopy
 
 from models.common import *
-from utils.general import LOGGER, make_divisible
-from utils.autoanchor import check_anchor_order
+from utils.general import LOGGER, make_divisible, check_anchor_order
 from utils.torch_utils import initialize_weights
 
 class Detect(nn.Module):
