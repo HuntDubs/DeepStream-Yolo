@@ -8,6 +8,7 @@ import logging.config
 LOGGING_NAME = 'ultralytics'
 RANK = int(os.getenv('RANK', -1))
 VERBOSE = str(os.getenv('YOLO_VERBOSE', True)).lower() == 'true'  # global verbose mode
+__version__ = "8.0.84"
 
 def set_logging(name=LOGGING_NAME, verbose=True):
     """Sets up logging for the given name."""
