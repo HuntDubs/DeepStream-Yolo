@@ -2,8 +2,8 @@ import argparse
 import os
 import struct
 import torch
-from ultralytics.yolo.utils.torch_utils import select_device
-from ultralytics.yolo.utils.tal import make_anchors
+from utils.torch_utils import select_device
+from utils.tal import make_anchors
 
 
 class Layers(object):
