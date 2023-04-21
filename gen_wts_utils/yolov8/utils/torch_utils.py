@@ -3,6 +3,7 @@ import platform
 import torch
 import pkg_resources as pkg
 import logging
+import logging.config
 
 LOGGING_NAME = 'ultralytics'
 RANK = int(os.getenv('RANK', -1))
