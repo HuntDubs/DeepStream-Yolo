@@ -1,5 +1,5 @@
 import torch
-from utils.torch_utils import check_version
+from ultralytics.utils.torch_utils import check_version
 
 TORCH_1_10 = check_version(torch.__version__, '1.10.0')
 

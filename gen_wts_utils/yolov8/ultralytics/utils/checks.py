@@ -1,9 +1,9 @@
 import re
 from pathlib import Path
 import glob
-from utils.torch_utils import LOGGER
+from ultralytics.utils.torch_utils import LOGGER
 
-from utils.torch_utils import ROOT, clean_url, url2file
+from ultralytics.utils.torch_utils import ROOT, clean_url, url2file
 
 def check_suffix(file='yolov8n.pt', suffix='.pt', msg=''):
     """Check file(s) for acceptable suffix."""

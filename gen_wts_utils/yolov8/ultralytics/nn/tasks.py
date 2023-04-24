@@ -5,12 +5,12 @@ import torch
 import torch.nn as nn
 import contextlib
 
-from ultralytics.modules import (C1, C2, C3, C3TR, SPP, SPPF, Bottleneck, BottleneckCSP, C2f, C3Ghost, C3x, Classify,
+from ultralytics.nn.modules import (C1, C2, C3, C3TR, SPP, SPPF, Bottleneck, BottleneckCSP, C2f, C3Ghost, C3x, Classify,
                                     Concat, Conv, ConvTranspose, Detect, DWConv, DWConvTranspose2d, Focus,
                                     GhostBottleneck, GhostConv, Pose, Segment)
-from utils.torch_utils import LOGGER, yaml_load
-from utils.checks import check_yaml
-from utils.torch_utils import ( initialize_weights, make_divisible ) 
+from ultralytics.utils.torch_utils import LOGGER, yaml_load
+from ultralytics.utils.checks import check_yaml
+from ultralytics.utils.torch_utils import ( initialize_weights, make_divisible ) 
 
 
 class BaseModel(nn.Module):
