@@ -4,9 +4,18 @@ import torch
 import pkg_resources as pkg
 import logging
 import logging.config
+import math
+from pathlib import Path
+import yaml
+import re
+import urllib
+
+import torch.nn as nn
 
 LOGGING_NAME = 'ultralytics'
 RANK = int(os.getenv('RANK', -1))
+FILE = Path(__file__).resolve()
+ROOT = FILE.parents[2]  # YOLO
 VERBOSE = str(os.getenv('YOLO_VERBOSE', True)).lower() == 'true'  # global verbose mode
 __version__ = "8.0.84"
 
@@ -110,3 +119,51 @@ def select_device(device='', batch=0, newline=False, verbose=True):
     if verbose and RANK == -1:
         LOGGER.info(s if newline else s.rstrip())
     return torch.device(arg)
+
+def initialize_weights(model):
+    """Initialize model weights to random values."""
+    for m in model.modules():
+        t = type(m)
+        if t is nn.Conv2d:
+            pass  # nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+        elif t is nn.BatchNorm2d:
+            m.eps = 1e-3
+            m.momentum = 0.03
+        elif t in [nn.Hardswish, nn.LeakyReLU, nn.ReLU, nn.ReLU6, nn.SiLU]:
+            m.inplace = True
+
+def make_divisible(x, divisor):
+    """Returns nearest x divisible by divisor."""
+    if isinstance(divisor, torch.Tensor):
+        divisor = int(divisor.max())  # to int
+    return math.ceil(x / divisor) * divisor
+
+def yaml_load(file='data.yaml', append_filename=False):
+    """
+    Load YAML data from a file.
+    Args:
+        file (str, optional): File name. Default is 'data.yaml'.
+        append_filename (bool): Add the YAML filename to the YAML dictionary. Default is False.
+    Returns:
+        dict: YAML data and file name.
+    """
+    with open(file, errors='ignore', encoding='utf-8') as f:
+        s = f.read()  # string
+
+        # Remove special characters
+        if not s.isprintable():
+            s = re.sub(r'[^\x09\x0A\x0D\x20-\x7E\x85\xA0-\uD7FF\uE000-\uFFFD\U00010000-\U0010ffff]+', '', s)
+
+        # Add YAML filename to dict and return
+        return {**yaml.safe_load(s), 'yaml_file': str(file)} if append_filename else yaml.safe_load(s)
+    
+def clean_url(url):
+    """Strip auth from URL, i.e. https://url.com/file.txt?auth -> https://url.com/file.txt."""
+    url = str(Path(url)).replace(':/', '://')  # Pathlib turns :// -> :/
+    return urllib.parse.unquote(url).split('?')[0]  # '%2F' to '/', split https://url.com/file.txt?auth
+
+
+def url2file(url):
+    """Convert URL to filename, i.e. https://url.com/file.txt?auth -> file.txt."""
+    return Path(clean_url(url)).name
+

@@ -401,38 +401,6 @@ class Concat(nn.Module):
         """Forward pass for the YOLOv8 mask Proto module."""
         return torch.cat(x, self.d)
 
-
-class Proto(nn.Module):
-    """YOLOv8 mask Proto module for segmentation models."""
-
-    def __init__(self, c1, c_=256, c2=32):  # ch_in, number of protos, number of masks
-        super().__init__()
-        self.cv1 = Conv(c1, c_, k=3)
-        self.upsample = nn.ConvTranspose2d(c_, c_, 2, 2, 0, bias=True)  # nn.Upsample(scale_factor=2, mode='nearest')
-        self.cv2 = Conv(c_, c_, k=3)
-        self.cv3 = Conv(c_, c2)
-
-    def forward(self, x):
-        """Performs a forward pass through layers using an upsampled input image."""
-        return self.cv3(self.cv2(self.upsample(self.cv1(x))))
-
-
-class Ensemble(nn.ModuleList):
-    """Ensemble of models."""
-
-    def __init__(self):
-        """Initialize an ensemble of models."""
-        super().__init__()
-
-    def forward(self, x, augment=False, profile=False, visualize=False):
-        """Function generates the YOLOv5 network's final layer."""
-        y = [module(x, augment, profile, visualize)[0] for module in self]
-        # y = torch.stack(y).max(0)[0]  # max ensemble
-        # y = torch.stack(y).mean(0)  # mean ensemble
-        y = torch.cat(y, 2)  # nms ensemble, y shape(B, HW, C)
-        return y, None  # inference, train output
-
-
 # Model heads below ----------------------------------------------------------------------------------------------------
 
 
@@ -546,22 +514,3 @@ class Pose(Detect):
         y[:, 0::ndim] = (y[:, 0::ndim] * 2.0 + (self.anchors[0] - 0.5)) * self.strides
         y[:, 1::ndim] = (y[:, 1::ndim] * 2.0 + (self.anchors[1] - 0.5)) * self.strides
         return y
-
-
-class Classify(nn.Module):
-    """YOLOv8 classification head, i.e. x(b,c1,20,20) to x(b,c2)."""
-
-    def __init__(self, c1, c2, k=1, s=1, p=None, g=1):  # ch_in, ch_out, kernel, stride, padding, groups
-        super().__init__()
-        c_ = 1280  # efficientnet_b0 size
-        self.conv = Conv(c1, c_, k, s, autopad(k, p), g)
-        self.pool = nn.AdaptiveAvgPool2d(1)  # to x(b,c_,1,1)
-        self.drop = nn.Dropout(p=0.0, inplace=True)
-        self.linear = nn.Linear(c_, c2)  # to x(b,c2)
-
-    def forward(self, x):
-        """Performs a forward pass of the YOLO model on input image data."""
-        if isinstance(x, list):
-            x = torch.cat(x, 1)
-        x = self.linear(self.drop(self.pool(self.conv(x)).flatten(1)))
-        return x if self.training else x.softmax(1)
