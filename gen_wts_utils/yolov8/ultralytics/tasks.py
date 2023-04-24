@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 import contextlib
 
-from nn.modules import (C1, C2, C3, C3TR, SPP, SPPF, Bottleneck, BottleneckCSP, C2f, C3Ghost, C3x, Classify,
+from ultralytics.modules import (C1, C2, C3, C3TR, SPP, SPPF, Bottleneck, BottleneckCSP, C2f, C3Ghost, C3x, Classify,
                                     Concat, Conv, ConvTranspose, Detect, DWConv, DWConvTranspose2d, Focus,
                                     GhostBottleneck, GhostConv, Pose, Segment)
 from utils.torch_utils import LOGGER, yaml_load
