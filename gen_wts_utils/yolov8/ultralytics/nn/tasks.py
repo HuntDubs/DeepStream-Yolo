@@ -17,19 +17,20 @@ class BaseModel(nn.Module):
     """
     The BaseModel class serves as a base class for all the models in the Ultralytics YOLO family.
     """
+    pass
 
-    def forward(self, x, profile=False, visualize=False):
-        """
-        Forward pass of the model on a single scale.
-        Wrapper for `_forward_once` method.
-        Args:
-            x (torch.Tensor): The input image tensor
-            profile (bool): Whether to profile the model, defaults to False
-            visualize (bool): Whether to return the intermediate feature maps, defaults to False
-        Returns:
-            (torch.Tensor): The output of the network.
-        """
-        return self._forward_once(x, profile, visualize)
+    # def forward(self, x, profile=False, visualize=False):
+    #     """
+    #     Forward pass of the model on a single scale.
+    #     Wrapper for `_forward_once` method.
+    #     Args:
+    #         x (torch.Tensor): The input image tensor
+    #         profile (bool): Whether to profile the model, defaults to False
+    #         visualize (bool): Whether to return the intermediate feature maps, defaults to False
+    #     Returns:
+    #         (torch.Tensor): The output of the network.
+    #     """
+    #     return self._forward_once(x, profile, visualize)
 
     # def _forward_once(self, x, profile=False, visualize=False):
     #     """
@@ -181,11 +182,11 @@ class DetectionModel(BaseModel):
             self.info()
             LOGGER.info('')
 
-    def forward(self, x, augment=False, profile=False, visualize=False):
-        """Run forward pass on input image(s) with optional augmentation and profiling."""
-        if augment:
-            return self._forward_augment(x)  # augmented inference, None
-        return self._forward_once(x, profile, visualize)  # single-scale inference, train
+    # def forward(self, x, augment=False, profile=False, visualize=False):
+    #     """Run forward pass on input image(s) with optional augmentation and profiling."""
+    #     if augment:
+    #         return self._forward_augment(x)  # augmented inference, None
+    #     return self._forward_once(x, profile, visualize)  # single-scale inference, train
 
     # def _forward_augment(self, x):
     #     """Perform augmentations on input image x and return augmented inference and train outputs."""

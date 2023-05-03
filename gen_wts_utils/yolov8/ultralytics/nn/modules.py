@@ -24,13 +24,13 @@ class Conv(nn.Module):
         self.bn = nn.BatchNorm2d(c2)
         self.act = self.default_act if act is True else act if isinstance(act, nn.Module) else nn.Identity()
 
-    def forward(self, x):
-        """Apply convolution, batch normalization and activation to input tensor."""
-        return self.act(self.bn(self.conv(x)))
+    # def forward(self, x):
+    #     """Apply convolution, batch normalization and activation to input tensor."""
+    #     return self.act(self.bn(self.conv(x)))
 
-    def forward_fuse(self, x):
-        """Perform transposed convolution of 2D data."""
-        return self.act(self.conv(x))
+    # def forward_fuse(self, x):
+    #     """Perform transposed convolution of 2D data."""
+    #     return self.act(self.conv(x))
 
 
 class DWConv(Conv):
@@ -58,13 +58,13 @@ class ConvTranspose(nn.Module):
         self.bn = nn.BatchNorm2d(c2) if bn else nn.Identity()
         self.act = self.default_act if act is True else act if isinstance(act, nn.Module) else nn.Identity()
 
-    def forward(self, x):
-        """Applies transposed convolutions, batch normalization and activation to input."""
-        return self.act(self.bn(self.conv_transpose(x)))
+    # def forward(self, x):
+    #     """Applies transposed convolutions, batch normalization and activation to input."""
+    #     return self.act(self.bn(self.conv_transpose(x)))
 
-    def forward_fuse(self, x):
-        """Applies activation and convolution transpose operation to input."""
-        return self.act(self.conv_transpose(x))
+    # def forward_fuse(self, x):
+    #     """Applies activation and convolution transpose operation to input."""
+    #     return self.act(self.conv_transpose(x))
 
 
 class DFL(nn.Module):
@@ -81,11 +81,11 @@ class DFL(nn.Module):
         self.conv.weight.data[:] = nn.Parameter(x.view(1, c1, 1, 1))
         self.c1 = c1
 
-    def forward(self, x):
-        """Applies a transformer layer on input tensor 'x' and returns a tensor."""
-        b, c, a = x.shape  # batch, channels, anchors
-        return self.conv(x.view(b, 4, self.c1, a).transpose(2, 1).softmax(1)).view(b, 4, a)
-        # return self.conv(x.view(b, self.c1, 4, a).softmax(1)).view(b, 4, a)
+    # def forward(self, x):
+    #     """Applies a transformer layer on input tensor 'x' and returns a tensor."""
+    #     b, c, a = x.shape  # batch, channels, anchors
+    #     return self.conv(x.view(b, 4, self.c1, a).transpose(2, 1).softmax(1)).view(b, 4, a)
+    #     # return self.conv(x.view(b, self.c1, 4, a).softmax(1)).view(b, 4, a)
 
 
 class TransformerLayer(nn.Module):
@@ -101,11 +101,11 @@ class TransformerLayer(nn.Module):
         self.fc1 = nn.Linear(c, c, bias=False)
         self.fc2 = nn.Linear(c, c, bias=False)
 
-    def forward(self, x):
-        """Apply a transformer block to the input x and return the output."""
-        x = self.ma(self.q(x), self.k(x), self.v(x))[0] + x
-        x = self.fc2(self.fc1(x)) + x
-        return x
+    # def forward(self, x):
+    #     """Apply a transformer block to the input x and return the output."""
+    #     x = self.ma(self.q(x), self.k(x), self.v(x))[0] + x
+    #     x = self.fc2(self.fc1(x)) + x
+    #     return x
 
 
 class TransformerBlock(nn.Module):
@@ -121,13 +121,13 @@ class TransformerBlock(nn.Module):
         self.tr = nn.Sequential(*(TransformerLayer(c2, num_heads) for _ in range(num_layers)))
         self.c2 = c2
 
-    def forward(self, x):
-        """Forward propagates the input through the bottleneck module."""
-        if self.conv is not None:
-            x = self.conv(x)
-        b, _, w, h = x.shape
-        p = x.flatten(2).permute(2, 0, 1)
-        return self.tr(p + self.linear(p)).permute(1, 2, 0).reshape(b, self.c2, w, h)
+    # def forward(self, x):
+    #     """Forward propagates the input through the bottleneck module."""
+    #     if self.conv is not None:
+    #         x = self.conv(x)
+    #     b, _, w, h = x.shape
+    #     p = x.flatten(2).permute(2, 0, 1)
+    #     return self.tr(p + self.linear(p)).permute(1, 2, 0).reshape(b, self.c2, w, h)
 
 
 class Bottleneck(nn.Module):
@@ -140,9 +140,9 @@ class Bottleneck(nn.Module):
         self.cv2 = Conv(c_, c2, k[1], 1, g=g)
         self.add = shortcut and c1 == c2
 
-    def forward(self, x):
-        """'forward()' applies the YOLOv5 FPN to input data."""
-        return x + self.cv2(self.cv1(x)) if self.add else self.cv2(self.cv1(x))
+    # def forward(self, x):
+    #     """'forward()' applies the YOLOv5 FPN to input data."""
+    #     return x + self.cv2(self.cv1(x)) if self.add else self.cv2(self.cv1(x))
 
 
 class BottleneckCSP(nn.Module):
@@ -159,11 +159,11 @@ class BottleneckCSP(nn.Module):
         self.act = nn.SiLU()
         self.m = nn.Sequential(*(Bottleneck(c_, c_, shortcut, g, e=1.0) for _ in range(n)))
 
-    def forward(self, x):
-        """Applies a CSP bottleneck with 3 convolutions."""
-        y1 = self.cv3(self.m(self.cv1(x)))
-        y2 = self.cv2(x)
-        return self.cv4(self.act(self.bn(torch.cat((y1, y2), 1))))
+    # def forward(self, x):
+    #     """Applies a CSP bottleneck with 3 convolutions."""
+    #     y1 = self.cv3(self.m(self.cv1(x)))
+    #     y2 = self.cv2(x)
+    #     return self.cv4(self.act(self.bn(torch.cat((y1, y2), 1))))
 
 
 class C3(nn.Module):
@@ -177,9 +177,9 @@ class C3(nn.Module):
         self.cv3 = Conv(2 * c_, c2, 1)  # optional act=FReLU(c2)
         self.m = nn.Sequential(*(Bottleneck(c_, c_, shortcut, g, k=((1, 1), (3, 3)), e=1.0) for _ in range(n)))
 
-    def forward(self, x):
-        """Forward pass through the CSP bottleneck with 2 convolutions."""
-        return self.cv3(torch.cat((self.m(self.cv1(x)), self.cv2(x)), 1))
+    # def forward(self, x):
+    #     """Forward pass through the CSP bottleneck with 2 convolutions."""
+    #     return self.cv3(torch.cat((self.m(self.cv1(x)), self.cv2(x)), 1))
 
 
 class C2(nn.Module):
@@ -193,10 +193,10 @@ class C2(nn.Module):
         # self.attention = ChannelAttention(2 * self.c)  # or SpatialAttention()
         self.m = nn.Sequential(*(Bottleneck(self.c, self.c, shortcut, g, k=((3, 3), (3, 3)), e=1.0) for _ in range(n)))
 
-    def forward(self, x):
-        """Forward pass through the CSP bottleneck with 2 convolutions."""
-        a, b = self.cv1(x).chunk(2, 1)
-        return self.cv2(torch.cat((self.m(a), b), 1))
+    # def forward(self, x):
+    #     """Forward pass through the CSP bottleneck with 2 convolutions."""
+    #     a, b = self.cv1(x).chunk(2, 1)
+    #     return self.cv2(torch.cat((self.m(a), b), 1))
 
 
 class C2f(nn.Module):
@@ -209,17 +209,17 @@ class C2f(nn.Module):
         self.cv2 = Conv((2 + n) * self.c, c2, 1)  # optional act=FReLU(c2)
         self.m = nn.ModuleList(Bottleneck(self.c, self.c, shortcut, g, k=((3, 3), (3, 3)), e=1.0) for _ in range(n))
 
-    def forward(self, x):
-        """Forward pass of a YOLOv5 CSPDarknet backbone layer."""
-        y = list(self.cv1(x).chunk(2, 1))
-        y.extend(m(y[-1]) for m in self.m)
-        return self.cv2(torch.cat(y, 1))
+    # def forward(self, x):
+    #     """Forward pass of a YOLOv5 CSPDarknet backbone layer."""
+    #     y = list(self.cv1(x).chunk(2, 1))
+    #     y.extend(m(y[-1]) for m in self.m)
+    #     return self.cv2(torch.cat(y, 1))
 
-    def forward_split(self, x):
-        """Applies spatial attention to module's input."""
-        y = list(self.cv1(x).split((self.c, self.c), 1))
-        y.extend(m(y[-1]) for m in self.m)
-        return self.cv2(torch.cat(y, 1))
+    # def forward_split(self, x):
+    #     """Applies spatial attention to module's input."""
+    #     y = list(self.cv1(x).split((self.c, self.c), 1))
+    #     y.extend(m(y[-1]) for m in self.m)
+    #     return self.cv2(torch.cat(y, 1))
 
 
 class ChannelAttention(nn.Module):
@@ -231,8 +231,8 @@ class ChannelAttention(nn.Module):
         self.fc = nn.Conv2d(channels, channels, 1, 1, 0, bias=True)
         self.act = nn.Sigmoid()
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return x * self.act(self.fc(self.pool(x)))
+    # def forward(self, x: torch.Tensor) -> torch.Tensor:
+    #     return x * self.act(self.fc(self.pool(x)))
 
 
 class SpatialAttention(nn.Module):
@@ -246,9 +246,9 @@ class SpatialAttention(nn.Module):
         self.cv1 = nn.Conv2d(2, 1, kernel_size, padding=padding, bias=False)
         self.act = nn.Sigmoid()
 
-    def forward(self, x):
-        """Apply channel and spatial attention on input for feature recalibration."""
-        return x * self.act(self.cv1(torch.cat([torch.mean(x, 1, keepdim=True), torch.max(x, 1, keepdim=True)[0]], 1)))
+    # def forward(self, x):
+    #     """Apply channel and spatial attention on input for feature recalibration."""
+    #     return x * self.act(self.cv1(torch.cat([torch.mean(x, 1, keepdim=True), torch.max(x, 1, keepdim=True)[0]], 1)))
 
 
 class CBAM(nn.Module):
@@ -259,9 +259,9 @@ class CBAM(nn.Module):
         self.channel_attention = ChannelAttention(c1)
         self.spatial_attention = SpatialAttention(kernel_size)
 
-    def forward(self, x):
-        """Applies the forward pass through C1 module."""
-        return self.spatial_attention(self.channel_attention(x))
+    # def forward(self, x):
+    #     """Applies the forward pass through C1 module."""
+    #     return self.spatial_attention(self.channel_attention(x))
 
 
 class C1(nn.Module):
@@ -272,10 +272,10 @@ class C1(nn.Module):
         self.cv1 = Conv(c1, c2, 1, 1)
         self.m = nn.Sequential(*(Conv(c2, c2, 3) for _ in range(n)))
 
-    def forward(self, x):
-        """Applies cross-convolutions to input in the C3 module."""
-        y = self.cv1(x)
-        return self.m(y) + y
+    # def forward(self, x):
+    #     """Applies cross-convolutions to input in the C3 module."""
+    #     y = self.cv1(x)
+    #     return self.m(y) + y
 
 
 class C3x(C3):
@@ -319,10 +319,10 @@ class SPP(nn.Module):
         self.cv2 = Conv(c_ * (len(k) + 1), c2, 1, 1)
         self.m = nn.ModuleList([nn.MaxPool2d(kernel_size=x, stride=1, padding=x // 2) for x in k])
 
-    def forward(self, x):
-        """Forward pass of the SPP layer, performing spatial pyramid pooling."""
-        x = self.cv1(x)
-        return self.cv2(torch.cat([x] + [m(x) for m in self.m], 1))
+    # def forward(self, x):
+    #     """Forward pass of the SPP layer, performing spatial pyramid pooling."""
+    #     x = self.cv1(x)
+    #     return self.cv2(torch.cat([x] + [m(x) for m in self.m], 1))
 
 
 class SPPF(nn.Module):
@@ -335,12 +335,12 @@ class SPPF(nn.Module):
         self.cv2 = Conv(c_ * 4, c2, 1, 1)
         self.m = nn.MaxPool2d(kernel_size=k, stride=1, padding=k // 2)
 
-    def forward(self, x):
-        """Forward pass through Ghost Convolution block."""
-        x = self.cv1(x)
-        y1 = self.m(x)
-        y2 = self.m(y1)
-        return self.cv2(torch.cat((x, y1, y2, self.m(y2)), 1))
+    # def forward(self, x):
+    #     """Forward pass through Ghost Convolution block."""
+    #     x = self.cv1(x)
+    #     y1 = self.m(x)
+    #     y2 = self.m(y1)
+    #     return self.cv2(torch.cat((x, y1, y2, self.m(y2)), 1))
 
 
 class Focus(nn.Module):
@@ -351,9 +351,9 @@ class Focus(nn.Module):
         self.conv = Conv(c1 * 4, c2, k, s, p, g, act=act)
         # self.contract = Contract(gain=2)
 
-    def forward(self, x):  # x(b,c,w,h) -> y(b,4c,w/2,h/2)
-        return self.conv(torch.cat((x[..., ::2, ::2], x[..., 1::2, ::2], x[..., ::2, 1::2], x[..., 1::2, 1::2]), 1))
-        # return self.conv(self.contract(x))
+    # def forward(self, x):  # x(b,c,w,h) -> y(b,4c,w/2,h/2)
+    #     return self.conv(torch.cat((x[..., ::2, ::2], x[..., 1::2, ::2], x[..., ::2, 1::2], x[..., 1::2, 1::2]), 1))
+    #     # return self.conv(self.contract(x))
 
 
 class GhostConv(nn.Module):
@@ -365,10 +365,10 @@ class GhostConv(nn.Module):
         self.cv1 = Conv(c1, c_, k, s, None, g, act=act)
         self.cv2 = Conv(c_, c_, 5, 1, None, c_, act=act)
 
-    def forward(self, x):
-        """Forward propagation through a Ghost Bottleneck layer with skip connection."""
-        y = self.cv1(x)
-        return torch.cat((y, self.cv2(y)), 1)
+    # def forward(self, x):
+    #     """Forward propagation through a Ghost Bottleneck layer with skip connection."""
+    #     y = self.cv1(x)
+    #     return torch.cat((y, self.cv2(y)), 1)
 
 
 class GhostBottleneck(nn.Module):
@@ -384,9 +384,9 @@ class GhostBottleneck(nn.Module):
         self.shortcut = nn.Sequential(DWConv(c1, c1, k, s, act=False), Conv(c1, c2, 1, 1,
                                                                             act=False)) if s == 2 else nn.Identity()
 
-    def forward(self, x):
-        """Applies skip connection and concatenation to input tensor."""
-        return self.conv(x) + self.shortcut(x)
+    # def forward(self, x):
+    #     """Applies skip connection and concatenation to input tensor."""
+    #     return self.conv(x) + self.shortcut(x)
 
 
 class Concat(nn.Module):
@@ -397,9 +397,9 @@ class Concat(nn.Module):
         super().__init__()
         self.d = dimension
 
-    def forward(self, x):
-        """Forward pass for the YOLOv8 mask Proto module."""
-        return torch.cat(x, self.d)
+    # def forward(self, x):
+    #     """Forward pass for the YOLOv8 mask Proto module."""
+    #     return torch.cat(x, self.d)
 
 # Model heads below ----------------------------------------------------------------------------------------------------
 
@@ -425,35 +425,35 @@ class Detect(nn.Module):
         self.cv3 = nn.ModuleList(nn.Sequential(Conv(x, c3, 3), Conv(c3, c3, 3), nn.Conv2d(c3, self.nc, 1)) for x in ch)
         self.dfl = DFL(self.reg_max) if self.reg_max > 1 else nn.Identity()
 
-    def forward(self, x):
-        """Concatenates and returns predicted bounding boxes and class probabilities."""
-        shape = x[0].shape  # BCHW
-        for i in range(self.nl):
-            x[i] = torch.cat((self.cv2[i](x[i]), self.cv3[i](x[i])), 1)
-        if self.training:
-            return x
-        elif self.dynamic or self.shape != shape:
-            self.anchors, self.strides = (x.transpose(0, 1) for x in make_anchors(x, self.stride, 0.5))
-            self.shape = shape
+    # def forward(self, x):
+    #     """Concatenates and returns predicted bounding boxes and class probabilities."""
+    #     shape = x[0].shape  # BCHW
+    #     for i in range(self.nl):
+    #         x[i] = torch.cat((self.cv2[i](x[i]), self.cv3[i](x[i])), 1)
+    #     if self.training:
+    #         return x
+    #     elif self.dynamic or self.shape != shape:
+    #         self.anchors, self.strides = (x.transpose(0, 1) for x in make_anchors(x, self.stride, 0.5))
+    #         self.shape = shape
 
-        x_cat = torch.cat([xi.view(shape[0], self.no, -1) for xi in x], 2)
-        if self.export and self.format in ('saved_model', 'pb', 'tflite', 'edgetpu', 'tfjs'):  # avoid TF FlexSplitV ops
-            box = x_cat[:, :self.reg_max * 4]
-            cls = x_cat[:, self.reg_max * 4:]
-        else:
-            box, cls = x_cat.split((self.reg_max * 4, self.nc), 1)
-        dbox = dist2bbox(self.dfl(box), self.anchors.unsqueeze(0), xywh=True, dim=1) * self.strides
-        y = torch.cat((dbox, cls.sigmoid()), 1)
-        return y if self.export else (y, x)
+    #     x_cat = torch.cat([xi.view(shape[0], self.no, -1) for xi in x], 2)
+    #     if self.export and self.format in ('saved_model', 'pb', 'tflite', 'edgetpu', 'tfjs'):  # avoid TF FlexSplitV ops
+    #         box = x_cat[:, :self.reg_max * 4]
+    #         cls = x_cat[:, self.reg_max * 4:]
+    #     else:
+    #         box, cls = x_cat.split((self.reg_max * 4, self.nc), 1)
+    #     dbox = dist2bbox(self.dfl(box), self.anchors.unsqueeze(0), xywh=True, dim=1) * self.strides
+    #     y = torch.cat((dbox, cls.sigmoid()), 1)
+    #     return y if self.export else (y, x)
 
-    def bias_init(self):
-        """Initialize Detect() biases, WARNING: requires stride availability."""
-        m = self  # self.model[-1]  # Detect() module
-        # cf = torch.bincount(torch.tensor(np.concatenate(dataset.labels, 0)[:, 0]).long(), minlength=nc) + 1
-        # ncf = math.log(0.6 / (m.nc - 0.999999)) if cf is None else torch.log(cf / cf.sum())  # nominal class frequency
-        for a, b, s in zip(m.cv2, m.cv3, m.stride):  # from
-            a[-1].bias.data[:] = 1.0  # box
-            b[-1].bias.data[:m.nc] = math.log(5 / m.nc / (640 / s) ** 2)  # cls (.01 objects, 80 classes, 640 img)
+    # def bias_init(self):
+    #     """Initialize Detect() biases, WARNING: requires stride availability."""
+    #     m = self  # self.model[-1]  # Detect() module
+    #     # cf = torch.bincount(torch.tensor(np.concatenate(dataset.labels, 0)[:, 0]).long(), minlength=nc) + 1
+    #     # ncf = math.log(0.6 / (m.nc - 0.999999)) if cf is None else torch.log(cf / cf.sum())  # nominal class frequency
+    #     for a, b, s in zip(m.cv2, m.cv3, m.stride):  # from
+    #         a[-1].bias.data[:] = 1.0  # box
+    #         b[-1].bias.data[:m.nc] = math.log(5 / m.nc / (640 / s) ** 2)  # cls (.01 objects, 80 classes, 640 img)
 
 
 class Segment(Detect):
@@ -470,16 +470,16 @@ class Segment(Detect):
         c4 = max(ch[0] // 4, self.nm)
         self.cv4 = nn.ModuleList(nn.Sequential(Conv(x, c4, 3), Conv(c4, c4, 3), nn.Conv2d(c4, self.nm, 1)) for x in ch)
 
-    def forward(self, x):
-        """Return model outputs and mask coefficients if training, otherwise return outputs and mask coefficients."""
-        p = self.proto(x[0])  # mask protos
-        bs = p.shape[0]  # batch size
+    # def forward(self, x):
+    #     """Return model outputs and mask coefficients if training, otherwise return outputs and mask coefficients."""
+    #     p = self.proto(x[0])  # mask protos
+    #     bs = p.shape[0]  # batch size
 
-        mc = torch.cat([self.cv4[i](x[i]).view(bs, self.nm, -1) for i in range(self.nl)], 2)  # mask coefficients
-        x = self.detect(self, x)
-        if self.training:
-            return x, mc, p
-        return (torch.cat([x, mc], 1), p) if self.export else (torch.cat([x[0], mc], 1), (x[1], mc, p))
+    #     mc = torch.cat([self.cv4[i](x[i]).view(bs, self.nm, -1) for i in range(self.nl)], 2)  # mask coefficients
+    #     x = self.detect(self, x)
+    #     if self.training:
+    #         return x, mc, p
+    #     return (torch.cat([x, mc], 1), p) if self.export else (torch.cat([x[0], mc], 1), (x[1], mc, p))
 
 
 class Pose(Detect):
@@ -495,25 +495,25 @@ class Pose(Detect):
         c4 = max(ch[0] // 4, self.nk)
         self.cv4 = nn.ModuleList(nn.Sequential(Conv(x, c4, 3), Conv(c4, c4, 3), nn.Conv2d(c4, self.nk, 1)) for x in ch)
 
-    def forward(self, x):
-        """Perform forward pass through YOLO model and return predictions."""
-        bs = x[0].shape[0]  # batch size
-        kpt = torch.cat([self.cv4[i](x[i]).view(bs, self.nk, -1) for i in range(self.nl)], -1)  # (bs, 17*3, h*w)
-        x = self.detect(self, x)
-        if self.training:
-            return x, kpt
-        pred_kpt = self.kpts_decode(kpt)
-        return torch.cat([x, pred_kpt], 1) if self.export else (torch.cat([x[0], pred_kpt], 1), (x[1], kpt))
+    # def forward(self, x):
+    #     """Perform forward pass through YOLO model and return predictions."""
+    #     bs = x[0].shape[0]  # batch size
+    #     kpt = torch.cat([self.cv4[i](x[i]).view(bs, self.nk, -1) for i in range(self.nl)], -1)  # (bs, 17*3, h*w)
+    #     x = self.detect(self, x)
+    #     if self.training:
+    #         return x, kpt
+    #     pred_kpt = self.kpts_decode(kpt)
+    #     return torch.cat([x, pred_kpt], 1) if self.export else (torch.cat([x[0], pred_kpt], 1), (x[1], kpt))
 
-    def kpts_decode(self, kpts):
-        """Decodes keypoints."""
-        ndim = self.kpt_shape[1]
-        y = kpts.clone()
-        if ndim == 3:
-            y[:, 2::3].sigmoid_()  # inplace sigmoid
-        y[:, 0::ndim] = (y[:, 0::ndim] * 2.0 + (self.anchors[0] - 0.5)) * self.strides
-        y[:, 1::ndim] = (y[:, 1::ndim] * 2.0 + (self.anchors[1] - 0.5)) * self.strides
-        return y
+    # def kpts_decode(self, kpts):
+    #     """Decodes keypoints."""
+    #     ndim = self.kpt_shape[1]
+    #     y = kpts.clone()
+    #     if ndim == 3:
+    #         y[:, 2::3].sigmoid_()  # inplace sigmoid
+    #     y[:, 0::ndim] = (y[:, 0::ndim] * 2.0 + (self.anchors[0] - 0.5)) * self.strides
+    #     y[:, 1::ndim] = (y[:, 1::ndim] * 2.0 + (self.anchors[1] - 0.5)) * self.strides
+    #     return y
 
 class Classify(nn.Module):
     """YOLOv8 classification head, i.e. x(b,c1,20,20) to x(b,c2)."""
@@ -526,9 +526,9 @@ class Classify(nn.Module):
         self.drop = nn.Dropout(p=0.0, inplace=True)
         self.linear = nn.Linear(c_, c2)  # to x(b,c2)
 
-    def forward(self, x):
-        """Performs a forward pass of the YOLO model on input image data."""
-        if isinstance(x, list):
-            x = torch.cat(x, 1)
-        x = self.linear(self.drop(self.pool(self.conv(x)).flatten(1)))
-        return x if self.training else x.softmax(1)
+    # def forward(self, x):
+    #     """Performs a forward pass of the YOLO model on input image data."""
+    #     if isinstance(x, list):
+    #         x = torch.cat(x, 1)
+    #     x = self.linear(self.drop(self.pool(self.conv(x)).flatten(1)))
+    #     return x if self.training else x.softmax(1)
