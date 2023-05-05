@@ -39,17 +39,8 @@ class Segment(Detect):
         self.proto = Proto(ch[0], self.npr, self.nm)  # protos
         self.detect = Detect.forward
 
-    def forward(self, x):
-        p = self.proto(x[0])
-        x = self.detect(self, x)
-        return (x, p) if self.training else (x[0], p) if self.export else (x[0], p, x[1])
-
-
 class BaseModel(nn.Module):
-    # YOLOv5 base model
-    def forward(self, x, profile=False, visualize=False):
-        return self._forward_once(x, profile, visualize)  # single-scale inference, train
-
+    pass
 
 class DetectionModel(BaseModel):
     # YOLOv5 detection model
