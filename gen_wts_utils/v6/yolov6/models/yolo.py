@@ -1,11 +1,10 @@
 import math
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from yolov6.layers.common import *
 from yolov6.utils.torch_utils import initialize_weights
-from yolov6.models.efficientrep import *
-from yolov6.models.reppan import *
+# from yolov6.models.efficientrep import *
+# from yolov6.models.reppan import *
 from yolov6.utils.events import LOGGER
 
 class Model(nn.Module):
