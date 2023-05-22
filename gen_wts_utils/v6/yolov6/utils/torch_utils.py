@@ -1,6 +1,6 @@
 import torch.nn as nn
 import os
-from events import LOGGER
+from yolov6.utils.events import LOGGER
 import requests
 
 def initialize_weights(model):
