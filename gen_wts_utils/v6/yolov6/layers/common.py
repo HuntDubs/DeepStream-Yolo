@@ -1,6 +1,5 @@
 import os
 # import warnings
-import numpy as np
 from pathlib import Path
 import torch
 import torch.nn as nn
