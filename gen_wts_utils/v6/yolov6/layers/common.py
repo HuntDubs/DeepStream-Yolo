@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 import torch.nn.init as init
 from torch.nn.parameter import Parameter
-from yolov6.utils.general import download_ckpt
+from utils.torch_utils import download_ckpt
 
 
 class SiLU(nn.Module):
