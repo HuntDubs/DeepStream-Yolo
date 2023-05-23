@@ -268,20 +268,20 @@ class RepVGGBlock(nn.Module):
         kernelid, biasid = self._fuse_bn_tensor(self.rbr_identity)
         return kernel3x3 + self._pad_1x1_to_3x3_tensor(kernel1x1) + kernelid, bias3x3 + bias1x1 + biasid
 
-    # def _avg_to_3x3_tensor(self, avgp):
-    #     channels = self.in_channels
-    #     groups = self.groups
-    #     kernel_size = avgp.kernel_size
-    #     input_dim = channels // groups
-    #     k = torch.zeros((channels, input_dim, kernel_size, kernel_size))
-    #     k[np.arange(channels), np.tile(np.arange(input_dim), groups), :, :] = 1.0 / kernel_size ** 2
-    #     return k
+    def _avg_to_3x3_tensor(self, avgp):
+        channels = self.in_channels
+        groups = self.groups
+        kernel_size = avgp.kernel_size
+        input_dim = channels // groups
+        k = torch.zeros((channels, input_dim, kernel_size, kernel_size))
+        k[np.arange(channels), np.tile(np.arange(input_dim), groups), :, :] = 1.0 / kernel_size ** 2
+        return k
     
-    # def _pad_1x1_to_3x3_tensor(self, kernel1x1):
-    #     if kernel1x1 is None:
-    #         return 0
-    #     else:
-    #         return torch.nn.functional.pad(kernel1x1, [1, 1, 1, 1])
+    def _pad_1x1_to_3x3_tensor(self, kernel1x1):
+        if kernel1x1 is None:
+            return 0
+        else:
+            return torch.nn.functional.pad(kernel1x1, [1, 1, 1, 1])
 
     def _fuse_bn_tensor(self, branch):
         if branch is None:
