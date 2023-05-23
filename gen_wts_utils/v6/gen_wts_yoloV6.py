@@ -2,7 +2,7 @@ import argparse
 import os
 import struct
 import torch
-from yolov6.assigners.anchor_generator import generate_anchors
+from yolov6.utils.anchor_generator import generate_anchors
 
 
 class Layers(object):
