@@ -4,7 +4,10 @@ import argparse
 import os
 import struct
 import torch
-from utils.torch_utils import select_device
+from utils.torch_utils import select_device as yolov5_select_device
+from ultralytics.utils.torch_utils import select_device as yolov8_select_device
+from ultralytics.utils.tal import make_anchors
+from yolov6.utils.anchor_generator import generate_anchors
 
 
 class Layers(object):
@@ -353,7 +356,7 @@ model_name = os.path.basename(pt_file).split('.pt')[0]
 wts_file = model_name + '.wts' if 'yolov5' in model_name else 'yolov5_' + model_name + '.wts'
 cfg_file = model_name + '.cfg' if 'yolov5' in model_name else 'yolov5_' + model_name + '.cfg'
 
-device = select_device('cpu')
+device = yolov5_select_device('cpu')
 model = torch.load(pt_file, map_location=device)['model'].float()
 
 anchor_grid = model.model[-1].anchors * model.model[-1].stride[..., None, None]
