@@ -285,7 +285,7 @@ class Layers(object):
                       'filters=%d\n' % filters +
                       'activation=%s\n' % act)
 
-    def route(self, layers):
+    def route(self, layers, axis=0):
         self.blocks[self.current] += 1
 
         if version == 8:
