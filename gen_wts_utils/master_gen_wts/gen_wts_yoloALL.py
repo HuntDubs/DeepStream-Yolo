@@ -1,4 +1,4 @@
-# As of right now this is just the yolov5 file
+# Works successfully with yolov5 and yolov8
 
 import argparse
 import os
