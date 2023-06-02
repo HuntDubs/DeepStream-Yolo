@@ -453,8 +453,11 @@ def parse_args():
     
     if not os.path.isfile(args.weights):
         raise SystemExit('Invalid weights file')
-    if not args.size and version == 5:
-        args.size = [1280] if args.p6 else [640]
+    if not args.size:
+        if args.p6 and version == 5:
+            args.size = [1280]
+        else: 
+            args.size = [640]
     return args.weights, args.size, version
 
 
