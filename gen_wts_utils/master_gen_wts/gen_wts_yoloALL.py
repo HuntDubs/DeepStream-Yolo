@@ -288,11 +288,12 @@ class Layers(object):
     def route(self, layers, axis=0):
         self.blocks[self.current] += 1
 
-        if version == 8:
-            a = 'axis=%d\n' % axis if axis != 0 else ''
+        
+        a = 'axis=%d\n' % axis if axis != 0 else ''
 
         self.fc.write('\n[route]\n' +
-                      'layers=%s\n' % layers)
+                      'layers=%s\n' % layers +
+                      a)
 
     def shortcut(self, r, ew='add', act='linear'):
         self.blocks[self.current] += 1
