@@ -440,37 +440,50 @@ def parse_args():
         '-s', '--size', nargs='+', type=int, help='Inference size [H,W] (default [640])')
     parser.add_argument("--p6", action="store_true", help="P6 model")
     args = parser.parse_args()
+
+    if '5' in args.weights:
+        print("Version 5 detected\n")
+        version = 5
+    elif '8' in args.weights:
+        print("Version 8 detected\n")
+        version = 8
+    elif '6' in args.weights:
+        print("Version 6 detected\n")
+        version = 6
+    
     if not os.path.isfile(args.weights):
         raise SystemExit('Invalid weights file')
-    if not args.size:
+    if not args.size and version == 5:
         args.size = [1280] if args.p6 else [640]
-    return args.weights, args.size
+    return args.weights, args.size, version
 
 
-pt_file, inference_size = parse_args()
+pt_file, inference_size, version = parse_args()
 
-if '5' in pt_file:
-    print("Version 5 detected\n")
-    version = 5
-elif '8' in pt_file:
-    print("Version 8 detected\n")
-    version = 8
-elif '6' in pt_file:
-    print("Version 6 detected\n")
-    version = 6
 
 model_name = os.path.basename(pt_file).split('.pt')[0]
-wts_file = model_name + '.wts' if 'yolov5' in model_name else 'yolov5_' + model_name + '.wts'
-cfg_file = model_name + '.cfg' if 'yolov5' in model_name else 'yolov5_' + model_name + '.cfg'
+if version == 5:
+    wts_file = model_name + '.wts' if 'yolov5' in model_name else 'yolov5_' + model_name + '.wts'
+    cfg_file = model_name + '.cfg' if 'yolov5' in model_name else 'yolov5_' + model_name + '.cfg'
+    device = yolov5_select_device('cpu')
+elif version == 8:
+    wts_file = model_name + '.wts' if 'yolov8' in model_name else 'yolov8_' + model_name + '.wts'
+    cfg_file = model_name + '.cfg' if 'yolov8' in model_name else 'yolov8_' + model_name + '.cfg'
+    device = yolov8_select_device('cpu')
 
-device = yolov5_select_device('cpu')
 model = torch.load(pt_file, map_location=device)['model'].float()
 
-anchor_grid = model.model[-1].anchors * model.model[-1].stride[..., None, None]
-delattr(model.model[-1], 'anchor_grid')
-model.model[-1].register_buffer('anchor_grid', anchor_grid)
+if version == 5:
+    anchor_grid = model.model[-1].anchors * model.model[-1].stride[..., None, None]
+    delattr(model.model[-1], 'anchor_grid')
+    model.model[-1].register_buffer('anchor_grid', anchor_grid)
 
 model.to(device).eval()
+
+if model.names and model.nc and version == 8:
+    with open("labels.txt", 'w') as fw:
+        for i in range(model.nc):
+            fw.write(model.names[i] + '\n')
 
 with open(wts_file, 'w') as fw, open(cfg_file, 'w') as fc:
     layers = Layers(len(model.model), inference_size, fw, fc)
@@ -480,6 +493,8 @@ with open(wts_file, 'w') as fw, open(cfg_file, 'w') as fc:
             layers.Focus(child)
         elif child._get_name() == 'Conv':
             layers.Conv(child)
+        elif child._get_name() == 'C2f':
+            layers.C2f(child)
         elif child._get_name() == 'BottleneckCSP':
             layers.BottleneckCSP(child)
         elif child._get_name() == 'C3':
@@ -494,6 +509,12 @@ with open(wts_file, 'w') as fw, open(cfg_file, 'w') as fc:
             layers.Concat(child)
         elif child._get_name() == 'Detect':
             layers.Detect(child)
+            if version == 8:
+                x = []
+                for stride in model.stride.tolist():
+                    x.append(torch.zeros([1, 1, int(layers.height / stride), int(layers.width / stride)], dtype=torch.float32))
+                anchor_points, stride_tensor = (x.transpose(0, 1) for x in make_anchors(x, child.stride, 0.5))
+                layers.get_anchors_v8(anchor_points.reshape([-1]), stride_tensor.reshape([-1]))
         elif child._get_name() == 'CBH':
             layers.CBH(child)
         elif child._get_name() == 'LC_Block':
