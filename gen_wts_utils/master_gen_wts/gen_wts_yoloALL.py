@@ -15,18 +15,15 @@ class Layers(object):
         self.blocks = [0 for _ in range(n)]
         if version == 5:
             self.current = 0
-            print("Version 5 detected\n")
+            self.num = 0
+            self.nc = 0
+            self.anchors = ''
+            self.masks = []
         elif version == 8:
             self.current = -1
-            print("Version 8 detected\n")
 
         self.width = size[0] if len(size) == 1 else size[1]
-        self.height = size[0]
-
-        self.num = 0
-        self.nc = 0
-        self.anchors = ''
-        self.masks = []
+        self.height = size[0] 
 
         self.fw = fw
         self.fc = fc
@@ -46,6 +43,14 @@ class Layers(object):
         self.fc.write('\n# Conv\n')
 
         self.convolutional(child)
+    
+    def C2f(self, child):
+        self.current = child.i
+        self.fc.write('\n# C2f\n')
+
+        self.convolutional(child.cv1)
+        self.c2f(child.m)
+        self.convolutional(child.cv2)
 
     def BottleneckCSP(self, child):
         self.current = child.i
@@ -134,13 +139,29 @@ class Layers(object):
         self.current = child.i
         self.fc.write('\n# Detect\n')
 
-        self.get_anchors(child.state_dict(), child.m[0].out_channels)
+        if version == 5:
+            self.get_anchors_v5(child.state_dict(), child.m[0].out_channels)
 
-        for i, m in enumerate(child.m):
-            r = self.get_route(child.f[i])
-            self.route('%d' % r)
-            self.convolutional(m, detect=True)
-            self.yolo(i)
+            for i, m in enumerate(child.m):
+                r = self.get_route(child.f[i])
+                self.route('%d' % r)
+                self.convolutional(m, detect=True)
+                self.yolo(i)
+        elif version == 8:
+            output_idxs = [0 for _ in range(child.nl)]
+            for i in range(child.nl):
+                r = self.get_route(child.f[i])
+                self.route('%d' % r)
+                for j in range(len(child.cv3[i])):
+                    self.convolutional(child.cv3[i][j])
+                self.route('%d' % (-1 - len(child.cv3[i])))
+                for j in range(len(child.cv2[i])):
+                    self.convolutional(child.cv2[i][j])
+                self.route('-1, %d' % (-2 - len(child.cv2[i])))
+                self.shuffle(reshape=[child.no, -1])
+                output_idxs[i] = (-1 + i * (-4 - len(child.cv3[i]) - len(child.cv2[i])))
+            self.route('%s' % str(output_idxs[::-1])[1:-1], axis=1)
+            self.yolo(child)
 
     def net(self):
         self.fc.write('[net]\n' +
@@ -216,6 +237,41 @@ class Layers(object):
                       g +
                       w +
                       'activation=%s\n' % act)
+        
+    def c2f(self, m):
+        self.blocks[self.current] += 1
+
+        for x in m:
+            self.get_state_dict(x.state_dict())
+
+        n = len(m)
+        shortcut = 1 if m[0].add else 0
+        filters = m[0].cv1.conv.out_channels
+        size = m[0].cv1.conv.kernel_size
+        stride = m[0].cv1.conv.stride
+        pad = m[0].cv1.conv.padding
+        groups = m[0].cv1.conv.groups
+        bias = m[0].cv1.conv.bias
+        bn = True if hasattr(m[0].cv1, 'bn') else False
+        act = 'linear'
+        if hasattr(m[0].cv1, 'act'):
+            act = self.get_activation(m[0].cv1.act._get_name()) 
+
+        b = 'batch_normalize=1\n' if bn is True else ''
+        g = 'groups=%d\n' % groups if groups > 1 else ''
+        w = 'bias=1\n' if bias is not None and bn is not False else 'bias=0\n' if bias is None and bn is False else ''
+
+        self.fc.write('\n[c2f]\n' +
+                      'n=%d\n' % n +
+                      'shortcut=%d\n' % shortcut +
+                      b +
+                      'filters=%d\n' % filters +
+                      'size=%s\n' % self.get_value(size) +
+                      'stride=%s\n' % self.get_value(stride) +
+                      'pad=%s\n' % self.get_value(pad) +
+                      g +
+                      w +
+                      'activation=%s\n' % act)
 
     def batchnorm(self, bn, act):
         self.blocks[self.current] += 1
@@ -231,6 +287,9 @@ class Layers(object):
 
     def route(self, layers):
         self.blocks[self.current] += 1
+
+        if version == 8:
+            a = 'axis=%d\n' % axis if axis != 0 else ''
 
         self.fc.write('\n[route]\n' +
                       'layers=%s\n' % layers)
@@ -265,6 +324,18 @@ class Layers(object):
 
         self.fc.write('\n[upsample]\n' +
                       'stride=%d\n' % stride)
+        
+    def shuffle(self, reshape=None, transpose1=None, transpose2=None):
+        self.blocks[self.current] += 1
+
+        r = 'reshape=%s\n' % ', '.join(str(x) for x in reshape) if reshape is not None else ''
+        t1 = 'transpose1=%s\n' % ', '.join(str(x) for x in transpose1) if transpose1 is not None else ''
+        t2 = 'transpose2=%s\n' % ', '.join(str(x) for x in transpose2) if transpose2 is not None else ''
+
+        self.fc.write('\n[shuffle]\n' +
+                      r +
+                      t1 +
+                      t2)
 
     def avgpool(self):
         self.blocks[self.current] += 1
@@ -274,13 +345,18 @@ class Layers(object):
     def yolo(self, i):
         self.blocks[self.current] += 1
 
-        self.fc.write('\n[yolo]\n' +
-                      'mask=%s\n' % self.masks[i] +
-                      'anchors=%s\n' % self.anchors +
-                      'classes=%d\n' % self.nc +
-                      'num=%d\n' % self.num +
-                      'scale_x_y=2.0\n' +
-                      'new_coords=1\n')
+        if version == 5:
+            self.fc.write('\n[yolo]\n' +
+                        'mask=%s\n' % self.masks[i] +
+                        'anchors=%s\n' % self.anchors +
+                        'classes=%d\n' % self.nc +
+                        'num=%d\n' % self.num +
+                        'scale_x_y=2.0\n' +
+                        'new_coords=1\n')
+        elif version == 8:
+             self.fc.write('\n[detect_v8]\n' +
+                      'num=%d\n' % (child.reg_max * 4) +
+                      'classes=%d\n' % child.nc)
 
     def get_state_dict(self, state_dict):
         for k, v in state_dict.items():
@@ -293,7 +369,7 @@ class Layers(object):
                 self.fw.write('\n')
                 self.wc += 1
 
-    def get_anchors(self, state_dict, out_channels):
+    def get_anchors_v5(self, state_dict, out_channels):
         anchor_grid = state_dict['anchor_grid']
         aa = anchor_grid.reshape(-1).tolist()
         am = anchor_grid.tolist()
@@ -309,6 +385,22 @@ class Layers(object):
                 mask.append(n)
                 n += 1
             self.masks.append(str(mask)[1:-1])
+    
+    def get_anchors_v8(self, anchor_points, stride_tensor):
+        vr = anchor_points.numpy()
+        self.fw.write('{} {} '.format('anchor_points', len(vr)))
+        for vv in vr:
+            self.fw.write(' ')
+            self.fw.write(struct.pack('>f', float(vv)).hex())
+        self.fw.write('\n')
+        self.wc += 1
+        vr = stride_tensor.numpy()
+        self.fw.write('{} {} '.format('stride_tensor', len(vr)))
+        for vv in vr:
+            self.fw.write(' ')
+            self.fw.write(struct.pack('>f', float(vv)).hex())
+        self.fw.write('\n')
+        self.wc += 1
 
     def get_value(self, key):
         if type(key) == int:
@@ -317,11 +409,11 @@ class Layers(object):
 
     def get_route(self, n):
         r = 0
-        if n < 0:
+        if n < 0 and version == 5:
             for i, b in enumerate(self.blocks[self.current-1::-1]):
                 if i < abs(n) - 1:
                     r -= b
-                else:
+                else: 
                     break
         else:
             for i, b in enumerate(self.blocks):
@@ -342,7 +434,7 @@ class Layers(object):
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='PyTorch YOLOv5 conversion')
+    parser = argparse.ArgumentParser(description='PyTorch YOLO conversion')
     parser.add_argument('-w', '--weights', required=True, help='Input weights (.pt) file path (required)')
     parser.add_argument(
         '-s', '--size', nargs='+', type=int, help='Inference size [H,W] (default [640])')
@@ -358,10 +450,13 @@ def parse_args():
 pt_file, inference_size = parse_args()
 
 if '5' in pt_file:
+    print("Version 5 detected\n")
     version = 5
 elif '8' in pt_file:
+    print("Version 8 detected\n")
     version = 8
 elif '6' in pt_file:
+    print("Version 6 detected\n")
     version = 6
 
 model_name = os.path.basename(pt_file).split('.pt')[0]
