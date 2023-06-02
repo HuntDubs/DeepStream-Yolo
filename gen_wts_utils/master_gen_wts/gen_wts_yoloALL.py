@@ -13,7 +13,12 @@ from yolov6.utils.anchor_generator import generate_anchors
 class Layers(object):
     def __init__(self, n, size, fw, fc):
         self.blocks = [0 for _ in range(n)]
-        self.current = 0
+        if version == 5:
+            self.current = 0
+            print("Version 5 detected\n")
+        elif version == 8:
+            self.current = -1
+            print("Version 8 detected\n")
 
         self.width = size[0] if len(size) == 1 else size[1]
         self.height = size[0]
@@ -351,6 +356,13 @@ def parse_args():
 
 
 pt_file, inference_size = parse_args()
+
+if '5' in pt_file:
+    version = 5
+elif '8' in pt_file:
+    version = 8
+elif '6' in pt_file:
+    version = 6
 
 model_name = os.path.basename(pt_file).split('.pt')[0]
 wts_file = model_name + '.wts' if 'yolov5' in model_name else 'yolov5_' + model_name + '.wts'
