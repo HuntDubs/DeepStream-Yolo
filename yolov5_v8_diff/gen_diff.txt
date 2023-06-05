@@ -7,6 +7,8 @@
 <         self.current = 0
 ---
 >         self.current = -1
+
+
 16,20d16
 <         self.num = 0
 <         self.nc = 0
